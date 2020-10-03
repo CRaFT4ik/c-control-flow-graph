@@ -7,4 +7,5 @@ build
 # My stuff
 .idea
 gradle
-src/main/gen
+gen
+vs_test_project
