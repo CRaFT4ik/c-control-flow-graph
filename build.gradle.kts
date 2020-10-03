@@ -6,7 +6,7 @@
 
 plugins {
     // Apply the Kotlin JVM plugin to add support for Kotlin.
-    id("org.jetbrains.kotlin.jvm") version "1.3.72"
+    id("org.jetbrains.kotlin.jvm") version "1.4.0"
 
     // Apply the application plugin to add support for building a CLI application.
     application
@@ -16,11 +16,15 @@ repositories {
     // Use jcenter for resolving dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
+    maven("https://kotlin.bintray.com/kotlinx")
+    maven("https://jitpack.io")
 }
 
 dependencies {
 
     implementation("org.antlr:antlr4:4.8")
+
+    implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3")
 
     // Align versions of all Kotlin components
     implementation(platform("org.jetbrains.kotlin:kotlin-bom"))
