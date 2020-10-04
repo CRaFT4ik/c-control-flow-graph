@@ -8,3 +8,4 @@ build
 .idea
 gradle
 gen
+examples/input.c

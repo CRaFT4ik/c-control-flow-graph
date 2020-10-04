@@ -29,6 +29,7 @@
 /** C 2011 grammar built from the C11 Spec */
 grammar C;
 
+options { contextSuperClass=ru.er_log.antlr.RuleContextWithAltNumAutoInc; }
 
 primaryExpression
     :   Identifier
