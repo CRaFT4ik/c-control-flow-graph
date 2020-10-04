@@ -16,11 +16,14 @@ repositories {
     // Use jcenter for resolving dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
+    mavenCentral()
     maven("https://kotlin.bintray.com/kotlinx")
     maven("https://jitpack.io")
 }
 
 dependencies {
+
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
 
     implementation("com.github.aakira:napier:1.4.1")
 
