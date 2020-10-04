@@ -1,6 +1,5 @@
 package ru.er_log.cfg
 
-import com.github.aakira.napier.Napier
 import org.antlr.v4.runtime.tree.TerminalNode
 import ru.er_log.antlr.gen.c.CBaseListener
 import ru.er_log.antlr.gen.c.CParser
@@ -8,37 +7,37 @@ import ru.er_log.antlr.gen.c.CParser
 
 class CFGListener(private val graph: CFGraph) : CBaseListener()
 {
-    private var altCounter = 0; get() = field++
-
     /** Вход в функцию. */
     override fun enterFunctionDefinition(ctx: CParser.FunctionDefinitionContext) {
         val node: TerminalNode = ctx.declarator().directDeclarator().directDeclarator().Identifier()
-
-        graph.add(CFGNodeFunction(ctx.altNumber, node.text))
-        Napier.v("Enter in '${node.text}', state ${ctx.altNumber}")
+        graph.enter(CFGNodeFunction(ctx.altNumber, node.text))
     }
 
     /** Выход из функции. */
     override fun exitFunctionDefinition(ctx: CParser.FunctionDefinitionContext) {
         val node: TerminalNode = ctx.declarator().directDeclarator().directDeclarator().Identifier()
-
-        Napier.v("Exit from '${node.text}', state ${ctx.altNumber}\n")
+        graph.close(CFGNodeFunction(ctx.altNumber, node.text))
     }
 
     /** Вызов функции. */
     override fun enterFunctionCall(ctx: CParser.FunctionCallContext) {
         val node = ctx.postfixExpression().primaryExpression().Identifier()
-
-        Napier.v("Calling ${node.text}, state ${ctx.altNumber}")
+        graph.enter(CFGNodeFunctionCall(ctx.altNumber, node.text))
     }
 
-    override fun enterSelectionStatement(ctx: CParser.SelectionStatementContext) {
-
-        Napier.v("Enter in 'if/switch' statement, state ${ctx.altNumber}")
+    override fun enterIfStatement(ctx: CParser.IfStatementContext) {
+        graph.enter(CFGNodeIfStatement(ctx.altNumber))
     }
 
-    override fun exitSelectionStatement(ctx: CParser.SelectionStatementContext) {
+    override fun exitIfStatement(ctx: CParser.IfStatementContext) {
+        graph.close(CFGNodeIfStatement(ctx.altNumber))
+    }
 
-        Napier.v("Exit from 'if/switch' statement, state ${ctx.altNumber}")
+    override fun enterElseStatement(ctx: CParser.ElseStatementContext) {
+        graph.enter(CFGNodeElseStatement(ctx.altNumber))
+    }
+
+    override fun exitElseStatement(ctx: CParser.ElseStatementContext) {
+        graph.close(CFGNodeElseStatement(ctx.altNumber))
     }
 }
