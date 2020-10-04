@@ -22,6 +22,8 @@ repositories {
 
 dependencies {
 
+    implementation("com.github.aakira:napier:1.4.1")
+
     implementation("org.antlr:antlr4:4.8")
 
     implementation("org.jetbrains.kotlinx:kotlinx-cli:0.3")

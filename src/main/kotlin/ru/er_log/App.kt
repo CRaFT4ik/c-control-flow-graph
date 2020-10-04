@@ -1,13 +1,17 @@
 package ru.er_log
 
+import com.github.aakira.napier.DebugAntilog
+import com.github.aakira.napier.Napier
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
 import kotlinx.cli.required
 import java.io.File
+import java.util.logging.Formatter
+import java.util.logging.LogRecord
 import kotlin.system.exitProcess
 
 
-class Parser(val programName: String)
+class Parser(programName: String)
 {
     private val parser = ArgParser(programName)
 
@@ -19,13 +23,15 @@ class Parser(val programName: String)
         try {
             parser.parse(args)
         } catch (e: IllegalStateException) {
-            println(e.message)
+            Napier.i(e.message!!)
             exitProcess(0)
         }
     }
 }
 
 fun main(args: Array<String>) {
+    initLogger()
+
     val parser = Parser("program")
     parser.parse(args)
 
@@ -33,6 +39,11 @@ fun main(args: Array<String>) {
     val result = CFG(inputData).calculate()
 
     writeTo(parser.output, result.toImage())
+}
+
+fun initLogger() {
+    val antilog = JvmAntilog()
+    Napier.base(antilog)
 }
 
 fun readFrom(input: String): String

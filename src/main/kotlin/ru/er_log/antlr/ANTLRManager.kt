@@ -11,12 +11,10 @@ import ru.er_log.antlr.gen.c.CParser
 
 class ANTLRManager(input: String, private val listener: ParseTreeListener)
 {
-    private val lexer: CLexer =
-        CLexer(CharStreams.fromString(input))
-    private val parser: CParser =
-        CParser(CommonTokenStream(lexer))
-    private val tree: ParseTree = parser.compilationUnit()
-    private val walker = ParseTreeWalker()
+    private val lexer: CLexer           = CLexer(CharStreams.fromString(input))
+    private val parser: CParser         = CParser(CommonTokenStream(lexer))
+    private val tree: ParseTree         = parser.compilationUnit()
+    private val walker: ParseTreeWalker = ParseTreeWalker()
 
     fun run() {
         walker.walk(listener, tree)
