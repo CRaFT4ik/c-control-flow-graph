@@ -494,12 +494,16 @@ expressionStatement
     ;
 
 selectionStatement
-    :   ifStatement
+    :   ifStatement elseIfStatement* elseStatement?
     |   switchStatement
     ;
 
 ifStatement
-    :   'if' '(' expression ')' statement elseStatement?
+    :   'if' '(' expression ')' statement
+    ;
+
+elseIfStatement
+    :   'else' 'if' '(' expression ')' statement
     ;
 
 elseStatement
@@ -511,9 +515,21 @@ switchStatement
     ;
 
 iterationStatement
+    :   whileStatement
+    |   doWhileStatement
+    |   forStatement
+    ;
+
+whileStatement
     :   While '(' expression ')' statement
-    |   Do statement While '(' expression ')' ';'
-    |   For '(' forCondition ')' statement
+    ;
+
+doWhileStatement
+    :   Do statement While '(' expression ')' ';'
+    ;
+
+forStatement
+    :   For '(' forCondition ')' statement
     ;
 
 //    |   'for' '(' expression? ';' expression?  ';' forUpdate? ')' statement

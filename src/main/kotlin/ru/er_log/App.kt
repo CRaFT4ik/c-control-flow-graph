@@ -3,8 +3,9 @@ package ru.er_log
 import com.github.aakira.napier.Napier
 import kotlinx.cli.ArgParser
 import kotlinx.cli.ArgType
+import kotlinx.cli.ArgType.Choice
 import kotlinx.cli.required
-import ru.er_log.cfg.CFGManager
+import ru.er_log.graph.cfg.CFGManager
 import java.io.File
 import java.io.IOException
 import java.io.InputStream
@@ -15,8 +16,10 @@ class Parser(programName: String)
 {
     private val parser = ArgParser(programName)
 
-    val input by parser.option(ArgType.String, shortName = "i", description = "Input C file").required()
-    val output by parser.option(ArgType.String, shortName = "o", description = "Output file path with name").required()
+    val choice = Choice(listOf("image", "text"), toVariant = {})
+
+    val input by parser.option(ArgType.String, shortName = "i", fullName = "input", description = "Input C file").required()
+    val output by parser.option(ArgType.String, shortName = "o", fullName = "output", description = "Output file path with name")
 
     fun parse(args: Array<String>)
     {
@@ -37,6 +40,8 @@ fun main(args: Array<String>) {
 
     val inputData = readFrom(parser.input)
     val result = CFGManager(inputData).calculate()
+
+    Napier.i(result.toGraph())
 
     val output = File(parser.output + ".png")
     result.toImage { streamIn, available -> writeStreamTo(output, streamIn, available) }
