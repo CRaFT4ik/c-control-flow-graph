@@ -5,19 +5,6 @@ import ru.er_log.graph.NodeStyle
 import ru.er_log.graph.StyleCatalogue
 import java.util.*
 
-class Link(val to: CFGNode, val style: LinkStyle)
-{
-    enum class LinkType(val flag: Int)
-    {
-        DEFAULT     (0b000000),
-        BACKWARD    (0b000001),
-        NONLINEAR   (0b000010);
-
-        companion object {
-            fun fold(vararg v: LinkType): Int = v.fold(0) { acc, it -> it.flag or acc }
-        }
-    }
-}
 
 sealed class CFGNode(
         /** Контекст (uuid) создания узла.
@@ -35,41 +22,36 @@ sealed class CFGNode(
         val uid: Int = getUID(),
 
         /** Список ссылок (переходов) данного узла. */
-        val links: MutableList<Link> = mutableListOf(),
+        val links: MutableList<CFGLink> = mutableListOf(),
 
         /** Список узлов, которые ссылаются на данный узел. */
-        private val linked: Stack<Link> = Stack()
+        private val linked: Stack<CFGLink> = Stack()
 ) {
     /** Крайний узел, к которому был привязан данный. */
     val lastLinked: CFGNode?
         get() = linked.lastOrNull()?.to
 
-    fun link(other: CFGNode, vararg type: Link.LinkType) {
+    fun link(other: CFGNode, vararg type: CFGLink.LinkType) {
         val style = calculateLinkStyle(*type)
-        links.add(Link(other, style))
-        other.linked.add(Link(this, style))
+        links.add(CFGLink(other, style))
+        other.linked.add(CFGLink(this, style))
     }
 
-    private fun calculateLinkStyle(vararg types: Link.LinkType) : LinkStyle {
-        val type = Link.LinkType.fold(*types)
+    private fun calculateLinkStyle(vararg types: CFGLink.LinkType) : LinkStyle {
+        val type = CFGLink.LinkType.fold(*types)
 
         val lineStyle = when {
-            0 != type and Link.LinkType.NONLINEAR.flag -> StyleCatalogue.LinkStyles.Style.DOTTED
+            0 != type and CFGLink.LinkType.NONLINEAR.flag -> StyleCatalogue.LinkStyles.Style.DOTTED
             else -> StyleCatalogue.LinkStyles.Style.SOLID
         }
 
         val colorStyle = when {
-            0 != type and Link.LinkType.BACKWARD.flag -> StyleCatalogue.ColorPalette.RED
+            0 != type and CFGLink.LinkType.BACKWARD.flag -> StyleCatalogue.ColorPalette.BLUE
             else -> StyleCatalogue.ColorPalette.DARK
         }
 
         return LinkStyle(colorStyle, lineStyle)
     }
-
-//    fun unlink(other: CFGNode) {
-//        links.remove(other)
-//        other.linked.remove(this)
-//    }
 
     companion object {
         private var counter = 0

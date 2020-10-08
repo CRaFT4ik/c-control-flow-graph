@@ -28,7 +28,7 @@ data class CFGResult(
     private val network: NetworkManager = NetworkManager.instance
 
     /**
-     * @param writer Long - обще кол-во данных, либо null
+     * @param writer Long - общее кол-во данных, либо null
      */
     fun toImage(writer: (InputStream, Long?) -> Unit) {
         val call = network.serviceGraphVis.buildImage(graph = toGraph())
@@ -84,29 +84,34 @@ data class CFGResult(
             }
         }
 
-        builder.append("splines=spline;label=\"Control-flow graph by Eldar T.\";}")
+        builder.append("splines=spline;label=\"\\nControl-flow graph by Eldar T.\\n\";}")
         return builder.toString()
     }
 
-//    fun toText() : String {
-//        val graph = toGraph()
-//                .replace("\n\r", "")
-//                .replace("\\n", " : ")
-//                .replace("\"", "")
-//
-//        val split = graph.split('{').filter { it.isNotBlank() }
-//
-//        val builder = StringBuilder()
-//        split.forEach { nodeRaw ->
-//            val node = nodeRaw.substringAfter('}')
-//            builder.append(node).append('\n')
-//
-//            val elements = nodeRaw.substringBefore('}', "")
-//            val elementsSplit = elements.split(';').filter { it.isNotBlank() }
-//            elementsSplit.forEach { builder.append('\t').append(it).append('\n') }
-//
-//            builder.append('\n')
-//        }
-//        return builder.toString()
-//    }
+    /**
+     * TODO: Метод необходимо переписать.
+     *
+     * @return строковое представление графа
+     */
+    fun toText() : String {
+        val graph = toGraph()
+                .replace("\n\r", "")
+                .replace("\\n", " : ")
+                .replace("\"", "")
+
+        val split = graph.split('{').filter { it.isNotBlank() }
+
+        val builder = StringBuilder()
+        split.forEach { nodeRaw ->
+            val node = nodeRaw.substringAfter('}')
+            builder.append(node).append('\n')
+
+            val elements = nodeRaw.substringBefore('}', "")
+            val elementsSplit = elements.split(';').filter { it.isNotBlank() }
+            elementsSplit.forEach { builder.append('\t').append(it).append('\n') }
+
+            builder.append('\n')
+        }
+        return builder.toString()
+    }
 }
