@@ -59,18 +59,19 @@ data class CFGResult(
 
         fun title(node: CFGNode): String {
             val titleBuilder = StringBuilder()
-            titleBuilder.append("\"${node.uid}")
-            if (node.title.isNotBlank()) { titleBuilder.append("\\n").append(node.title) }
+            titleBuilder.append("\"")
+            if (node.title.isNotBlank()) { titleBuilder.append(node.title).append(" :: ") }
+            titleBuilder.append(node.uid)
             titleBuilder.append("\"")
             return titleBuilder.toString()
         }
 
         fun node(node: CFGNode): String {
-            return "${title(node)}[shape=\"${node.style.shape.value}\",color=\"${node.style.color.value}\",fillcolor=\"${color(node.context)}\"];"
+            return "${title(node)}[shape=\"${node.style.shape.value}\",fontcolor=\"${node.style.color.value}\",fillcolor=\"${node.style.fillcolor.value}\"];"
         }
 
         builder.append("digraph{")
-        builder.append("""node[style="filled",fillcolor="#F2F2F2",fontname=Inter];""")
+        builder.append("""node[style="filled,rounded",color="#B9B9B9",fillcolor="#F2F2F2",fontname=Consolas,width=1.2,height=0.7,margin="0.46,0"];""")
 
         nodes.forEach { node ->
             node.links.forEach { linkNode ->

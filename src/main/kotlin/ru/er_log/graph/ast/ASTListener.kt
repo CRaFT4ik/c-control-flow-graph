@@ -24,23 +24,16 @@ class ASTListener(private val graph: CFGraph) : CBaseListener()
 
     override fun enterFunctionDefinition(ctx: CParser.FunctionDefinitionContext) {
         val node: TerminalNode = ctx.declarator().directDeclarator().directDeclarator().Identifier()
-        graph.enter(CFGNodeFunction(ctx.altNumber, node.text + "()"))
+        graph.enter(CFGNodeFunction(ctx.altNumber, node.text + "(...)"))
     }
 
     override fun exitFunctionDefinition(ctx: CParser.FunctionDefinitionContext) {
         graph.close(ctx.altNumber)
     }
 
-    /** Вызов функции. */
-
-    override fun enterFunctionCall(ctx: CParser.FunctionCallContext) {
-        val node = ctx.postfixExpression().primaryExpression().Identifier()
-        graph.enter(CFGNodeFunctionCall(ctx.altNumber, node.text + "()"))
-    }
-
-    override fun exitFunctionCall(ctx: CParser.FunctionCallContext) {
-        graph.close(ctx.altNumber)
-    }
+    /**
+     * Инструкции выбора.
+     */
 
     /** Инструкция IF. */
 
@@ -72,6 +65,10 @@ class ASTListener(private val graph: CFGraph) : CBaseListener()
         graph.close(ctx.altNumber)
     }
 
+    /**
+     * Итерационные инструкции.
+     */
+
     /** Инструкция FOR. */
 
     override fun enterForStatement(ctx: CParser.ForStatementContext) {
@@ -102,13 +99,58 @@ class ASTListener(private val graph: CFGraph) : CBaseListener()
         graph.close(ctx.altNumber)
     }
 
-    /** Инструкции перехода. */
+    /**
+     * Инструкции перехода.
+     */
 
-    override fun enterJumpStatement(ctx: CParser.JumpStatementContext) {
-        graph.enter(CFGNodeJumpStatement(ctx.altNumber))
+    /** Вызов функции. */
+
+    override fun enterFunctionCall(ctx: CParser.FunctionCallContext) {
+        val node = ctx.postfixExpression().primaryExpression().Identifier()
+        graph.enter(CFGNodeFunctionCall(ctx.altNumber, node.text + "(...)"))
     }
 
-    override fun exitJumpStatement(ctx: CParser.JumpStatementContext) {
+    override fun exitFunctionCall(ctx: CParser.FunctionCallContext) {
+        graph.close(ctx.altNumber)
+    }
+
+    /** Инструкция GOTO. */
+
+    override fun enterGotoStatement(ctx: CParser.GotoStatementContext) {
+        graph.enter(CFGNodeGotoStatement(ctx.altNumber))
+    }
+
+    override fun exitGotoStatement(ctx: CParser.GotoStatementContext) {
+        graph.close(ctx.altNumber)
+    }
+
+    /** Инструкция CONTINUE. */
+
+    override fun enterContninueStatement(ctx: CParser.ContninueStatementContext) {
+        graph.enter(CFGNodeContinueStatement(ctx.altNumber))
+    }
+
+    override fun exitContninueStatement(ctx: CParser.ContninueStatementContext) {
+        graph.close(ctx.altNumber)
+    }
+
+    /** Инструкция BREAK. */
+
+    override fun enterBreakStatement(ctx: CParser.BreakStatementContext) {
+        graph.enter(CFGNodeBreakStatement(ctx.altNumber))
+    }
+
+    override fun exitBreakStatement(ctx: CParser.BreakStatementContext) {
+        graph.close(ctx.altNumber)
+    }
+
+    /** Инструкция RETURN. */
+
+    override fun enterReturnStatement(ctx: CParser.ReturnStatementContext) {
+        graph.enter(CFGNodeReturnStatement(ctx.altNumber))
+    }
+
+    override fun exitReturnStatement(ctx: CParser.ReturnStatementContext) {
         graph.close(ctx.altNumber)
     }
 }

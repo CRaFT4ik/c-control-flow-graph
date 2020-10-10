@@ -10,7 +10,12 @@ data class CFGraph(
         val graph: MutableList<CFGNode> = mutableListOf(),
 
         /** Стек незакрытых блоков, ожидающих добавления в граф. */
-        private val unclosedStack: Stack<CFGNode> = Stack()
+        private val unclosedStack: Stack<CFGNode> = Stack(),
+
+        /** Список ожидающих линковки.
+          * Ключ - узел, при вхождении в который нужно осуществить линковку;
+          * Значение - стек ожидающий линковки. После линковки делается pop(). */
+        private val linkWaiters: HashMap<CFGLinearNode, Stack<Pair<CFGNode, CFGLink.LinkType?>>> = hashMapOf()
 ) {
     fun start() {}
     fun finish() {} // graph.removeIf { it.links.isEmpty() && it.lastLinked == null }
@@ -25,7 +30,7 @@ data class CFGraph(
 
         when {
             node is CFGNodeFunction -> {}
-            unclosedStack.isNotEmpty() -> link(unclosedStack.last(), node)
+            unclosedStack.isNotEmpty() -> if (!onEnterLinearBlock(unclosedStack.last(), node)) { return }
             else -> link(graph.lastOrNull(), node)
         }
 
@@ -40,12 +45,32 @@ data class CFGraph(
     }
 
     /**
+     * Возвращает false, если за блоком [lastParent] нельзя ничего добавлять.
+     * @param lastParent CFGNode
+     * @param node CFGNode
+     * @return Boolean
+     */
+    private fun onEnterLinearBlock(lastParent: CFGNode, node: CFGNode) : Boolean {
+        when (lastParent) {
+            is CFGChoiceNode -> link(lastParent, node, CFGLink.LinkType.DIR_PRIM)
+            is CFGJumpNode -> return false
+            else -> link(lastParent, node)
+        }
+        return true
+    }
+
+    private fun findLastIteratorNode(): CFGIterationNode? {
+        return unclosedStack.filterIsInstance<CFGIterationNode>().lastOrNull()
+    }
+
+    /**
      * Вызывается, когда парсинг элемента завершается.
      * Находит элемент с заданным [context]. Если элемент составной, закрывает как его самого,
      * так и все дочерние (несмотря на то что они, возможно, не закрыты).
      */
     fun close(context: Int) {
-        val node: CFGNode = findNode(context)
+        val node = findNode(context) ?: return
+
         log("exit from $node")
 
         if (node is CFGNodeFunction || node !is CFGLinearNode) { return }
@@ -53,14 +78,22 @@ data class CFGraph(
         onCloseLinearBlock(node, unclosedStack.lastOrNull())
 
         val index = unclosedStack.indexOf(node)
-        while (unclosedStack.size > index) {
+        while (index >= 0 && unclosedStack.size > index) {
             val pop = unclosedStack.pop()
             graph.add(pop)
         }
     }
 
-    private fun onCloseLinearBlock(node: CFGNode, lastChild: CFGNode?) = when(node) {
-        is CFGIterationNode -> link(lastChild, node, CFGLink.LinkType.BACKWARD)
+    private fun onCloseLinearBlock(node: CFGLinearNode, lastChild: CFGNode?) = when(node) {
+//        is CFGChoiceNode -> when(lastChild) {
+//            is CFGNode -> waitChild(node, lastChild, CFGLink.LinkType.DEFAULT)
+//            else -> {}
+//        }
+        is CFGIterationNode -> when(lastChild) {
+            is CFGNodeBreakStatement -> waitChild(node, lastChild, CFGLink.LinkType.DIR_JUMP)
+            is CFGNodeReturnStatement -> {}
+            else -> link(lastChild, node, CFGLink.LinkType.DIR_BACK)
+        }
         else -> {}
     }
 
@@ -70,14 +103,26 @@ data class CFGraph(
         val types: MutableList<CFGLink.LinkType> = mutableListOf()
 
         if (linkType != null) { types.add(linkType) }
-        if (from is CFGNonLinearNode) { types.add(CFGLink.LinkType.NONLINEAR) }
+        if (from is CFGNodeFunctionCall) { types.add(CFGLink.LinkType.NONLINEAR) }
+        if (from is CFGChoiceNode) { types.add(CFGLink.LinkType.DIR_ALTER) }
+
+        if (from is CFGNodeGotoStatement) { types.add(CFGLink.LinkType.DIR_JUMP) }
+        if (from is CFGNodeReturnStatement) { types.add(CFGLink.LinkType.DIR_JUMP) }
+
+        val waiter = linkWaiters[from]?.pop()
+        link(waiter?.first, to, waiter?.second)
 
         from.link(to, *types.toTypedArray())
     }
 
-    private fun findNode(context: Int): CFGNode = when {
-        unclosedStack.isNotEmpty() -> unclosedStack.find { it.context == context }!!
-        else -> graph.find { it.context == context }!!
+    private fun waitChild(parent: CFGLinearNode, waiter: CFGNode, linkType: CFGLink.LinkType?) {
+        val stack = linkWaiters[parent] ?: Stack()
+        stack.push(waiter to linkType)
+        linkWaiters[parent] = stack
+    }
+
+    private fun findNode(context: Int): CFGNode? {
+        return unclosedStack.find { it.context == context } ?: graph.find { it.context == context }
     }
 
     private fun log(message: String) {

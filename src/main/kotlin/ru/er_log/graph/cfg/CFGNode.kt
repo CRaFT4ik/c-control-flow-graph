@@ -1,8 +1,8 @@
 package ru.er_log.graph.cfg
 
-import ru.er_log.graph.LinkStyle
 import ru.er_log.graph.NodeStyle
 import ru.er_log.graph.StyleCatalogue
+import ru.er_log.graph.cfg.CFGLink.Companion.calculateLinkStyle
 import java.util.*
 
 
@@ -37,22 +37,6 @@ sealed class CFGNode(
         other.linked.add(CFGLink(this, style))
     }
 
-    private fun calculateLinkStyle(vararg types: CFGLink.LinkType) : LinkStyle {
-        val type = CFGLink.LinkType.fold(*types)
-
-        val lineStyle = when {
-            0 != type and CFGLink.LinkType.NONLINEAR.flag -> StyleCatalogue.LinkStyles.Style.DOTTED
-            else -> StyleCatalogue.LinkStyles.Style.SOLID
-        }
-
-        val colorStyle = when {
-            0 != type and CFGLink.LinkType.BACKWARD.flag -> StyleCatalogue.ColorPalette.BLUE
-            else -> StyleCatalogue.ColorPalette.DARK
-        }
-
-        return LinkStyle(colorStyle, lineStyle)
-    }
-
     companion object {
         private var counter = 0
         @Synchronized fun getUID(): Int = counter++
@@ -62,12 +46,12 @@ sealed class CFGNode(
 /**
  * Узел с нелинейным выполнением.
  */
-abstract class CFGNonLinearNode(context: Int, title: String) : CFGNode(context, title)
+abstract class CFGNonLinearNode(context: Int, title: String, style: NodeStyle = StyleCatalogue.NodeStyles.default) : CFGNode(context, title, style)
 
 /**
  * Узел с линейным выполнением.
  */
-abstract class CFGLinearNode(context: Int, title: String): CFGNode(context, title)
+abstract class CFGLinearNode(context: Int, title: String, style: NodeStyle = StyleCatalogue.NodeStyles.default): CFGNode(context, title, style)
 {
     /** Ссылка на копию данного узла.
       * Узел состоит из двух частей: открывающего и закрывающего блоков. */
@@ -81,16 +65,22 @@ abstract class CFGLinearNode(context: Int, title: String): CFGNode(context, titl
     }
 }
 
-data class CFGNodeFunction          (override val context: Int, override val title: String = "function")            : CFGNode(context, title)
+data class CFGNodeFunction          (override val context: Int, override val title: String = "function")            : CFGNode(context, title, StyleCatalogue.NodeStyles.function)
 
-data class CFGNodeIfStatement       (override val context: Int, override val title: String = "if statement")        : CFGLinearNode(context, title)
-data class CFGNodeElseIfStatement   (override val context: Int, override val title: String = "else if statement")   : CFGLinearNode(context, title)
-data class CFGNodeElseStatement     (override val context: Int, override val title: String = "else statement")      : CFGLinearNode(context, title)
+abstract class CFGChoiceNode        (context: Int, title: String = "choice statement") : CFGLinearNode(context, title, StyleCatalogue.NodeStyles.choice)
+data class CFGNodeIfStatement       (override val context: Int, override val title: String = "if statement")        : CFGChoiceNode(context, title)
+data class CFGNodeElseIfStatement   (override val context: Int, override val title: String = "else if statement")   : CFGChoiceNode(context, title)
+data class CFGNodeElseStatement     (override val context: Int, override val title: String = "else statement")      : CFGChoiceNode(context, title)
 
-abstract class CFGIterationNode     (context: Int, title: String) : CFGLinearNode(context, title)
+abstract class CFGIterationNode     (context: Int, title: String = "iteration statement") : CFGLinearNode(context, title, StyleCatalogue.NodeStyles.iteration)
 data class CFGNodeForStatement      (override val context: Int, override val title: String = "for statement")       : CFGIterationNode(context, title)
 data class CFGNodeWhileStatement    (override val context: Int, override val title: String = "while statement")     : CFGIterationNode(context, title)
 data class CFGNodeDoWhileStatement  (override val context: Int, override val title: String = "do while statement")  : CFGIterationNode(context, title)
 
+abstract class CFGJumpNode          (context: Int, title: String = "jump statement", style: NodeStyle = StyleCatalogue.NodeStyles.jump) : CFGNonLinearNode(context, title, style)
+data class CFGNodeGotoStatement     (override val context: Int, override val title: String = "goto statement")      : CFGJumpNode(context, title)
+data class CFGNodeReturnStatement   (override val context: Int, override val title: String = "return statement")    : CFGJumpNode(context, title)
+data class CFGNodeContinueStatement (override val context: Int, override val title: String = "continue statement")  : CFGJumpNode(context, title, StyleCatalogue.NodeStyles.breaks)
+data class CFGNodeBreakStatement    (override val context: Int, override val title: String = "break statement")     : CFGJumpNode(context, title, StyleCatalogue.NodeStyles.breaks)
+
 data class CFGNodeFunctionCall      (override val context: Int, override val title: String = "function call")       : CFGNonLinearNode(context, title)
-data class CFGNodeJumpStatement     (override val context: Int, override val title: String = "jump statement")      : CFGNonLinearNode(context, title)

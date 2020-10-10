@@ -551,11 +551,27 @@ forExpression
     ;
 
 jumpStatement
+    :   gotoStatement
+    |   contninueStatement
+    |   breakStatement
+    |   returnStatement
+    ;
+
+gotoStatement
     :   'goto' Identifier ';'
-    |   'continue' ';'
-    |   'break' ';'
-    |   'return' expression? ';'
     |   'goto' unaryExpression ';' // GCC extension
+    ;
+
+contninueStatement
+    :   'continue' ';'
+    ;
+
+breakStatement
+    :   'break' ';'
+    ;
+
+returnStatement
+    :   'return' expression? ';'
     ;
 
 compilationUnit
