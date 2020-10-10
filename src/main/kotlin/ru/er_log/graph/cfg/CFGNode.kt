@@ -31,7 +31,7 @@ sealed class CFGNode(
     val lastLinked: CFGNode?
         get() = linked.lastOrNull()?.to
 
-    fun link(other: CFGNode, vararg type: CFGLink.LinkType) {
+    open fun link(other: CFGNode, vararg type: CFGLink.LinkType) {
         val style = calculateLinkStyle(*type)
         links.add(CFGLink(other, style))
         other.linked.add(CFGLink(this, style))
@@ -46,41 +46,72 @@ sealed class CFGNode(
 /**
  * Узел с нелинейным выполнением.
  */
-abstract class CFGNonLinearNode(context: Int, title: String, style: NodeStyle = StyleCatalogue.NodeStyles.default) : CFGNode(context, title, style)
+abstract class CFGNonBodyNode(context: Int, title: String, style: NodeStyle = StyleCatalogue.NodeStyles.default) : CFGNode(context, title, style)
 
 /**
  * Узел с линейным выполнением.
  */
-abstract class CFGLinearNode(context: Int, title: String, style: NodeStyle = StyleCatalogue.NodeStyles.default): CFGNode(context, title, style)
+abstract class CFGBodyNode(context: Int, title: String, style: NodeStyle = StyleCatalogue.NodeStyles.default): CFGNode(context, title, style)
 {
-    /** Ссылка на копию данного узла.
-      * Узел состоит из двух частей: открывающего и закрывающего блоков. */
-    lateinit var adjacentNode: CFGLinearNode
+    protected val body: Stack<CFGNode> = Stack()
 
-    companion object {
-        infix fun CFGLinearNode.tie(other: CFGLinearNode) {
-            this.adjacentNode = other
-            other.adjacentNode = this
+    open fun onEnter() {
+        body.add(this)
+    }
+
+    open fun onClose() {}
+
+//    override fun link(other: CFGNode, vararg type: CFGLink.LinkType) {
+//        when (val last = body.last()) {
+//            this -> super.link(other, *type)
+//            else -> last.link(other, *type)
+//        }
+//    }
+
+    open fun push(other: CFGNode) {
+        when (other) {
+            is CFGBodyNode -> body.last().link(other.body.first())
+            else -> body.last().link(other)
         }
+        body.add(other)
     }
 }
 
-data class CFGNodeFunction          (override val context: Int, override val title: String = "function")            : CFGNode(context, title, StyleCatalogue.NodeStyles.function)
+data class CFGNodeFunction          (override val context: Int, override val title: String = "function")            : CFGBodyNode(context, title, StyleCatalogue.NodeStyles.function)
 
-abstract class CFGChoiceNode        (context: Int, title: String = "choice statement") : CFGLinearNode(context, title, StyleCatalogue.NodeStyles.choice)
+abstract class CFGChoiceNode        (context: Int, title: String = "choice statement") : CFGBodyNode(context, title, StyleCatalogue.NodeStyles.choice)
 data class CFGNodeIfStatement       (override val context: Int, override val title: String = "if statement")        : CFGChoiceNode(context, title)
 data class CFGNodeElseIfStatement   (override val context: Int, override val title: String = "else if statement")   : CFGChoiceNode(context, title)
 data class CFGNodeElseStatement     (override val context: Int, override val title: String = "else statement")      : CFGChoiceNode(context, title)
 
-abstract class CFGIterationNode     (context: Int, title: String = "iteration statement") : CFGLinearNode(context, title, StyleCatalogue.NodeStyles.iteration)
+abstract class CFGIterationNode     (context: Int, title: String = "iteration statement") : CFGBodyNode(context, title, StyleCatalogue.NodeStyles.iteration)
 data class CFGNodeForStatement      (override val context: Int, override val title: String = "for statement")       : CFGIterationNode(context, title)
 data class CFGNodeWhileStatement    (override val context: Int, override val title: String = "while statement")     : CFGIterationNode(context, title)
+{
+    override fun onClose() {
+        body.last().link(body.first(), CFGLink.LinkType.DIR_BACK)
+    }
+}
 data class CFGNodeDoWhileStatement  (override val context: Int, override val title: String = "do while statement")  : CFGIterationNode(context, title)
+{
+    override fun onEnter() {}
 
-abstract class CFGJumpNode          (context: Int, title: String = "jump statement", style: NodeStyle = StyleCatalogue.NodeStyles.jump) : CFGNonLinearNode(context, title, style)
+    override fun onClose() {
+        body.lastOrNull()?.link(this)
+        body.add(this)
+        link(body.first(), CFGLink.LinkType.DIR_BACK)
+    }
+
+    override fun push(other: CFGNode) {
+        body.lastOrNull()?.link(other)
+        body.add(other)
+    }
+}
+
+abstract class CFGJumpNode          (context: Int, title: String = "jump statement", style: NodeStyle = StyleCatalogue.NodeStyles.jump) : CFGNonBodyNode(context, title, style)
 data class CFGNodeGotoStatement     (override val context: Int, override val title: String = "goto statement")      : CFGJumpNode(context, title)
 data class CFGNodeReturnStatement   (override val context: Int, override val title: String = "return statement")    : CFGJumpNode(context, title)
 data class CFGNodeContinueStatement (override val context: Int, override val title: String = "continue statement")  : CFGJumpNode(context, title, StyleCatalogue.NodeStyles.breaks)
 data class CFGNodeBreakStatement    (override val context: Int, override val title: String = "break statement")     : CFGJumpNode(context, title, StyleCatalogue.NodeStyles.breaks)
 
-data class CFGNodeFunctionCall      (override val context: Int, override val title: String = "function call")       : CFGNonLinearNode(context, title)
+data class CFGNodeFunctionCall      (override val context: Int, override val title: String = "function call")       : CFGNonBodyNode(context, title)
