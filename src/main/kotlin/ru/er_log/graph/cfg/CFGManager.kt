@@ -7,17 +7,16 @@ import okhttp3.ResponseBody
 import retrofit2.Response
 import ru.er_log.antlr.ANTLRManager
 import ru.er_log.graph.StyleCatalogue
-import ru.er_log.graph.ast.ASTListener
+import ru.er_log.graph.cfg.nodes.CFGNode
 import ru.er_log.network.NetworkManager
 import java.io.File
 import java.io.InputStream
 import kotlin.math.absoluteValue
 
-
 class CFGManager(input: String)
 {
     private val graph: CFGraph = CFGraph()
-    private val listener = ASTListener(graph)
+    private val listener = ASTAdapter(graph)
     private val antlrManager: ANTLRManager = ANTLRManager(input, listener)
 
     fun calculate(): CFGResult {

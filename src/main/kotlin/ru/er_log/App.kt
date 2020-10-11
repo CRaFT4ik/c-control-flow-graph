@@ -11,7 +11,6 @@ import java.io.IOException
 import java.io.InputStream
 import kotlin.system.exitProcess
 
-
 class Parser(programName: String)
 {
     private val parser = ArgParser(programName)

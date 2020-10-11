@@ -8,7 +8,6 @@ import java.io.StringWriter
 import java.util.logging.*
 import java.util.regex.Pattern
 
-
 class JvmAntilog(
         private val defaultTag: String = "app",
         private val handler: List<Handler> = listOf()

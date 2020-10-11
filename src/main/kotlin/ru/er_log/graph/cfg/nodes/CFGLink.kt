@@ -1,8 +1,7 @@
-package ru.er_log.graph.cfg
+package ru.er_log.graph.cfg.nodes
 
 import ru.er_log.graph.LinkStyle
 import ru.er_log.graph.StyleCatalogue
-
 
 class CFGLink(val to: CFGNode, val style: LinkStyle)
 {

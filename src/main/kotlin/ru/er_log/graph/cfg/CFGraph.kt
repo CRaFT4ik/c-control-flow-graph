@@ -1,15 +1,21 @@
 package ru.er_log.graph.cfg
 
+import ru.er_log.graph.cfg.nodes.CFGBodyNode
+import ru.er_log.graph.cfg.nodes.CFGLink
+import ru.er_log.graph.cfg.nodes.CFGNode
+import ru.er_log.graph.cfg.nodes.linear.CFGChoiceNode
+import ru.er_log.graph.cfg.nodes.nonlinear.CFGNodeFunctionCall
+import ru.er_log.graph.cfg.nodes.nonlinear.CFGNodeGotoStatement
+import ru.er_log.graph.cfg.nodes.nonlinear.CFGNodeReturnStatement
 import java.util.*
 
-
 data class CFGraph(
-        /** Формируемый список связанных узлов.
-          * Состоит из элементов, завершивших участие в парсинге. */
-        val graph: MutableList<CFGNode> = mutableListOf(),
+    /** Формируемый список связанных узлов.
+     * Состоит из элементов, завершивших участие в парсинге. */
+    val graph: MutableList<CFGNode> = mutableListOf(),
 
-        /** Стек незакрытых блоков, ожидающих добавления в граф. */
-        private val bodyStack: Stack<CFGBodyNode> = Stack()
+    /** Стек незакрытых блоков, ожидающих добавления в граф. */
+    private val bodyStack: Stack<CFGBodyNode> = Stack()
 ) {
     fun start() {}
     fun finish() {}

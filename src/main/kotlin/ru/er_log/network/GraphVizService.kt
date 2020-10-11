@@ -6,7 +6,6 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 import retrofit2.http.Streaming
 
-
 /**
  * API: https://quickchart.io/documentation/graphviz-api/
  */

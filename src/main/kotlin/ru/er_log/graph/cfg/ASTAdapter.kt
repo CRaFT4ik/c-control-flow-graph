@@ -1,13 +1,14 @@
-package ru.er_log.graph.ast
+package ru.er_log.graph.cfg
 
 import org.antlr.v4.runtime.tree.TerminalNode
 import ru.er_log.antlr.gen.c.CBaseListener
 import ru.er_log.antlr.gen.c.CParser
-import ru.er_log.graph.cfg.*
+import ru.er_log.graph.cfg.nodes.CFGNode
+import ru.er_log.graph.cfg.nodes.linear.*
+import ru.er_log.graph.cfg.nodes.nonlinear.*
 import java.util.*
 
-
-class ASTListener(private val graph: CFGraph) : CBaseListener()
+class ASTAdapter(private val graph: CFGraph) : CBaseListener()
 {
     private val stack: Stack<CFGNode> = Stack()
 
@@ -24,8 +25,9 @@ class ASTListener(private val graph: CFGraph) : CBaseListener()
     /** Определение функции. */
 
     override fun enterFunctionDefinition(ctx: CParser.FunctionDefinitionContext) {
-        val node: TerminalNode = ctx.declarator().directDeclarator().directDeclarator().Identifier()
-        graph.enter(stack.push(CFGNodeFunction(ctx.altNumber, node.text + "(...)")))
+        val origin: TerminalNode = ctx.declarator().directDeclarator().directDeclarator().Identifier()
+        val node = CFGNodeFunction(ctx.altNumber, stack.size, origin.text + "(...)")
+        graph.enter(stack.push(node))
     }
 
     override fun exitFunctionDefinition(ctx: CParser.FunctionDefinitionContext) {
@@ -39,7 +41,8 @@ class ASTListener(private val graph: CFGraph) : CBaseListener()
     /** Инструкция IF. */
 
     override fun enterIfStatement(ctx: CParser.IfStatementContext) {
-        graph.enter(stack.push(CFGNodeIfStatement(ctx.altNumber)))
+        val node = CFGNodeIfStatement(ctx.altNumber, stack.size)
+        graph.enter(stack.push(node))
     }
 
     override fun exitIfStatement(ctx: CParser.IfStatementContext) {
@@ -49,7 +52,8 @@ class ASTListener(private val graph: CFGraph) : CBaseListener()
     /** Инструкция ELSE IF. */
 
     override fun enterElseIfStatement(ctx: CParser.ElseIfStatementContext) {
-        graph.enter(stack.push(CFGNodeElseIfStatement(ctx.altNumber)))
+        val node = CFGNodeElseIfStatement(ctx.altNumber, stack.size)
+        graph.enter(stack.push(node))
     }
 
     override fun exitElseIfStatement(ctx: CParser.ElseIfStatementContext) {
@@ -59,7 +63,8 @@ class ASTListener(private val graph: CFGraph) : CBaseListener()
     /** Инструкция ELSE. */
 
     override fun enterElseStatement(ctx: CParser.ElseStatementContext) {
-        graph.enter(stack.push(CFGNodeElseStatement(ctx.altNumber)))
+        val node = CFGNodeElseStatement(ctx.altNumber, stack.size)
+        graph.enter(stack.push(node))
     }
 
     override fun exitElseStatement(ctx: CParser.ElseStatementContext) {
@@ -73,7 +78,8 @@ class ASTListener(private val graph: CFGraph) : CBaseListener()
     /** Инструкция FOR. */
 
     override fun enterForStatement(ctx: CParser.ForStatementContext) {
-        graph.enter(stack.push(CFGNodeForStatement(ctx.altNumber)))
+        val node = CFGNodeForStatement(ctx.altNumber, stack.size)
+        graph.enter(stack.push(node))
     }
 
     override fun exitForStatement(ctx: CParser.ForStatementContext) {
@@ -83,7 +89,8 @@ class ASTListener(private val graph: CFGraph) : CBaseListener()
     /** Инструкция WHILE. */
 
     override fun enterWhileStatement(ctx: CParser.WhileStatementContext) {
-        graph.enter(stack.push(CFGNodeWhileStatement(ctx.altNumber)))
+        val node = CFGNodeWhileStatement(ctx.altNumber, stack.size)
+        graph.enter(stack.push(node))
     }
 
     override fun exitWhileStatement(ctx: CParser.WhileStatementContext) {
@@ -93,7 +100,8 @@ class ASTListener(private val graph: CFGraph) : CBaseListener()
     /** Инструкция DO WHILE. */
 
     override fun enterDoWhileStatement(ctx: CParser.DoWhileStatementContext) {
-        graph.enter(stack.push(CFGNodeDoWhileStatement(ctx.altNumber)))
+        val node = CFGNodeDoWhileStatement(ctx.altNumber, stack.size)
+        graph.enter(stack.push(node))
     }
 
     override fun exitDoWhileStatement(ctx: CParser.DoWhileStatementContext) {
@@ -107,8 +115,9 @@ class ASTListener(private val graph: CFGraph) : CBaseListener()
     /** Вызов функции. */
 
     override fun enterFunctionCall(ctx: CParser.FunctionCallContext) {
-        val node = ctx.postfixExpression().primaryExpression().Identifier()
-        graph.enter(stack.push(CFGNodeFunctionCall(ctx.altNumber, node.text + "(...)")))
+        val origin = ctx.postfixExpression().primaryExpression().Identifier()
+        val node = CFGNodeFunctionCall(ctx.altNumber, stack.size, origin.text + "(...)")
+        graph.enter(stack.push(node))
     }
 
     override fun exitFunctionCall(ctx: CParser.FunctionCallContext) {
@@ -118,7 +127,8 @@ class ASTListener(private val graph: CFGraph) : CBaseListener()
     /** Инструкция GOTO. */
 
     override fun enterGotoStatement(ctx: CParser.GotoStatementContext) {
-        graph.enter(stack.push(CFGNodeGotoStatement(ctx.altNumber)))
+        val node = CFGNodeGotoStatement(ctx.altNumber, stack.size)
+        graph.enter(stack.push(node))
     }
 
     override fun exitGotoStatement(ctx: CParser.GotoStatementContext) {
@@ -128,7 +138,8 @@ class ASTListener(private val graph: CFGraph) : CBaseListener()
     /** Инструкция CONTINUE. */
 
     override fun enterContninueStatement(ctx: CParser.ContninueStatementContext) {
-        graph.enter(stack.push(CFGNodeContinueStatement(ctx.altNumber)))
+        val node = CFGNodeContinueStatement(ctx.altNumber, stack.size)
+        graph.enter(stack.push(node))
     }
 
     override fun exitContninueStatement(ctx: CParser.ContninueStatementContext) {
@@ -138,7 +149,8 @@ class ASTListener(private val graph: CFGraph) : CBaseListener()
     /** Инструкция BREAK. */
 
     override fun enterBreakStatement(ctx: CParser.BreakStatementContext) {
-        graph.enter(stack.push(CFGNodeBreakStatement(ctx.altNumber)))
+        val node = CFGNodeBreakStatement(ctx.altNumber, stack.size)
+        graph.enter(stack.push(node))
     }
 
     override fun exitBreakStatement(ctx: CParser.BreakStatementContext) {
@@ -148,7 +160,8 @@ class ASTListener(private val graph: CFGraph) : CBaseListener()
     /** Инструкция RETURN. */
 
     override fun enterReturnStatement(ctx: CParser.ReturnStatementContext) {
-        graph.enter(stack.push(CFGNodeReturnStatement(ctx.altNumber)))
+        val node = CFGNodeReturnStatement(ctx.altNumber, stack.size)
+        graph.enter(stack.push(node))
     }
 
     override fun exitReturnStatement(ctx: CParser.ReturnStatementContext) {
