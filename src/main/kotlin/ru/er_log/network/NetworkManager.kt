@@ -2,6 +2,7 @@ package ru.er_log.network
 
 import okhttp3.OkHttpClient
 import retrofit2.Retrofit
+import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
 
@@ -20,6 +21,7 @@ class NetworkManager private constructor()
     private val retrofit = Retrofit.Builder()
         .client(client)
         .baseUrl("https://www.er-log.ru")
+        .addConverterFactory(GsonConverterFactory.create())
         .build()
 
     val serviceGraphVis: GraphVisService = retrofit.create(GraphVisService::class.java)

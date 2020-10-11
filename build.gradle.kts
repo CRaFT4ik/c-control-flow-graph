@@ -23,6 +23,12 @@ repositories {
 
 dependencies {
 
+    implementation("ch.qos.logback:logback-classic:1.2.3")
+
+    implementation("guru.nidi:graphviz-java-all-j2v8:0.17.0")
+
+    implementation("com.squareup.retrofit2:converter-gson:2.9.0")
+
     implementation("com.squareup.retrofit2:retrofit:2.9.0")
 
     implementation("com.github.aakira:napier:1.4.1")

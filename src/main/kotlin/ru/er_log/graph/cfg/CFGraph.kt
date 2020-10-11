@@ -1,6 +1,5 @@
 package ru.er_log.graph.cfg
 
-import com.github.aakira.napier.Napier
 import java.util.*
 
 
@@ -19,7 +18,7 @@ data class CFGraph(
      * Вызывается, когда парсинг элемента только начинается.
      */
     fun enter(node: CFGNode) {
-        Napier.v(" enter in $node")
+        //Napier.v(" enter in $node")
 
         if (node is CFGBodyNode) {
             node.onEnter()
@@ -31,7 +30,7 @@ data class CFGraph(
      * Вызывается, когда парсинг элемента завершается.
      */
     fun close(node: CFGNode) {
-        Napier.v("exit from $node")
+        //Napier.v("exit from $node")
 
         if (node is CFGBodyNode) {
             node.onClose()

@@ -44,7 +44,8 @@ fun main(args: Array<String>) {
     Napier.i(result.toGraph())
 
     val output = File(parser.output + ".png")
-    result.toImage { streamIn, available -> writeStreamTo(output, streamIn, available) }
+    //result.toImageByNetwork { streamIn, available -> writeStreamTo(output, streamIn, available) }
+    result.toImage(output)
 
     exitProcess(0) // Because OkHttp doesn't close download connection (wtf?).
 }

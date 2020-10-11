@@ -494,16 +494,17 @@ expressionStatement
     ;
 
 selectionStatement
-    :   ifStatement elseIfStatement* elseStatement?
+    :   ifStatement
     |   switchStatement
     ;
 
 ifStatement
-    :   'if' '(' expression ')' statement
+    :   'if' '(' expression ')' statement elseIfStatement?
+    |   'if' '(' expression ')' statement elseStatement
     ;
 
 elseIfStatement
-    :   'else' 'if' '(' expression ')' statement
+    :   'else' 'if' '(' expression ')' statement elseIfStatement? elseStatement?
     ;
 
 elseStatement

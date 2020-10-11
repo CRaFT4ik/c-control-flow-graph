@@ -1,11 +1,15 @@
 package ru.er_log.graph.cfg
 
 import com.github.aakira.napier.Napier
+import guru.nidi.graphviz.engine.Format
+import guru.nidi.graphviz.engine.Graphviz
 import okhttp3.ResponseBody
 import retrofit2.Response
 import ru.er_log.antlr.ANTLRManager
+import ru.er_log.graph.StyleCatalogue
 import ru.er_log.graph.ast.ASTListener
 import ru.er_log.network.NetworkManager
+import java.io.File
 import java.io.InputStream
 import kotlin.math.absoluteValue
 
@@ -23,26 +27,37 @@ class CFGManager(input: String)
 }
 
 data class CFGResult(
-        val graph: CFGraph
+    val graph: CFGraph
 ) {
     private val network: NetworkManager = NetworkManager.instance
 
     /**
      * @param writer Long - общее кол-во данных, либо null
      */
-    fun toImage(writer: (InputStream, Long?) -> Unit) {
+    fun toImageByNetwork(writer: (InputStream, Long?) -> Unit) {
         val call = network.serviceGraphVis.buildImage(graph = toGraph())
         try {
             val response: Response<ResponseBody> = call.execute()
             if (response.isSuccessful && response.body() != null) {
                 val total = response.body()!!.contentLength()
-                writer(response.body()!!.byteStream(), if (total != -1L) { total } else { null })
+                writer(
+                    response.body()!!.byteStream(), if (total != -1L) {
+                        total
+                    } else {
+                        null
+                    }
+                )
             } else {
                 throw Exception("Can't get image from server: ${response.raw()}")
             }
         } catch (e: Exception) {
             Napier.e("Error while building graph: ${e.message}")
         }
+    }
+
+    fun toImage(file: File) {
+        val gv = Graphviz.fromString(toGraph())
+        gv.render(Format.PNG).toFile(file)
     }
 
     fun toGraph(): String {
@@ -53,7 +68,8 @@ data class CFGResult(
             val colorPool = listOf(
                 "#ECD1C9", "#FBB5AE", "#FFEFBC", "#B7D1DF", "#D1E2CE",
                 "#FADAE5", "#ECE3D5", "#F2F2F2", "#ECE3C1", "#BEDFC8",
-                "#F9F2B6", "#EFD0BD", "#DDD0E5", "#F2E4C8", "#CBCBCB")
+                "#F9F2B6", "#EFD0BD", "#DDD0E5", "#F2E4C8", "#CBCBCB"
+            )
             return colorPool[obj.hashCode().absoluteValue % colorPool.size]
         }
 
@@ -67,11 +83,15 @@ data class CFGResult(
         }
 
         fun node(node: CFGNode): String {
-            return "${title(node)}[shape=\"${node.style.shape.value}\",fontcolor=\"${node.style.color.value}\",fillcolor=\"${node.style.fillcolor.value}\"];"
+            val width = when(node.style.shape) {
+                StyleCatalogue.NodeStyles.Shape.DIAMOND -> "4"
+                else -> "2"
+            }
+            return "${title(node)}[shape=\"${node.style.shape.value}\",fontcolor=\"${node.style.color.value}\",fillcolor=\"${node.style.fillcolor.value}\",width=$width];"
         }
 
         builder.append("digraph{")
-        builder.append("""node[style="filled,rounded",color="#B9B9B9",fillcolor="#F2F2F2",fontname=Consolas,width=1.2,height=0.7,margin="0.46,0"];""")
+        builder.append("""node[style="filled,rounded",color="#B9B9B9",fillcolor="#F2F2F2",fontname="Arial",height=0.64,margin="0.1,0"];""")
 
         nodes.forEach { node ->
             node.links.forEach { linkNode ->
