@@ -15,8 +15,8 @@ abstract class CFGChoiceNode(context: Int, deepness: Int, title: String = "choic
         super.onClose()
     }
 
-    override fun formLeaves(): MutableSet<CFGNode> {
-        val leaves = super.formLeaves()
+    override fun leaves(): MutableSet<CFGNode> {
+        val leaves = super.leaves()
         if (closed && this.links.size < 2) { leaves.add(this) }
         return leaves
     }

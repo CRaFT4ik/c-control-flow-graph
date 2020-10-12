@@ -3,6 +3,7 @@ package ru.er_log.graph.cfg.nodes
 import com.github.aakira.napier.Napier
 import ru.er_log.graph.NodeStyle
 import ru.er_log.graph.StyleCatalogue
+import ru.er_log.graph.cfg.nodes.nonlinear.CFGJumpNode
 import java.util.*
 
 sealed class CFGNode(
@@ -28,7 +29,7 @@ sealed class CFGNode(
     val links: MutableList<CFGLink> = mutableListOf(),
 
     /** Список узлов, которые ссылаются на данный узел. */
-    private val linked: Stack<CFGLink> = Stack()
+    val linked: Stack<CFGLink> = Stack()
 ) {
     /** Крайний узел, к которому был привязан данный. */
     val lastLinked: CFGNode?
@@ -109,21 +110,22 @@ abstract class CFGBodyNode(
             else -> other
         }
 
-        leaves().forEach { it.link(linkTo, linkType) }
+        nodesForLinking().forEach { it.link(linkTo, linkType) }
         body.add(other)
     }
 
     /**
-     * Собирает все листья текущего подграфа.
-     * Если таких нет, возвращает последний вставленный элемент.
+     * Определяет список узлов, с которыми можно связать следующий узел на этой же глубине (в этом же контексте).
+     * По умолчанию собирает все листья текущего подграфа. Если таких нет, возвращает последний вставленный элемент.
+     * В списке листьев не учитываются [CFGJumpNode].
      *
      * ВНИМАНИЕ:
      *   Эта функция НЕ ДЛЯ ВЫЗОВА из родительских узлов. Допускается вызов только внутри контекста данного узла.
-     *   Чтобы изменить поведение сбора листьев также за пределами этого узла, используйте [formLeaves].
+     *   Чтобы изменить поведение сбора листьев также за пределами этого узла, используйте [leaves].
      */
-    open fun leaves(): MutableSet<CFGNode> {
-        val leaves = formLeaves()
-        if (leaves.isEmpty()) { body.lastOrNull()?.let { leaves.add(it) } }
+    open fun nodesForLinking(): MutableSet<CFGNode> {
+        val leaves = leaves()
+        if (leaves.none { it !is CFGJumpNode }) { body.lastOrNull()?.let { leaves.add(it) } }
         return leaves
     }
 
@@ -135,11 +137,11 @@ abstract class CFGBodyNode(
      *   Эта функция вызывается еще и при сборе листьев В ДОЧЕРНИХ блоках, то есть также когда листья
      *   собирает и родительский узел.
      */
-    open fun formLeaves(): MutableSet<CFGNode> {
+    open fun leaves(): MutableSet<CFGNode> {
         val list = mutableSetOf<CFGNode>()
         body.forEach { node ->
             when(node) {
-                is CFGBodyNode -> if (node != this) { list.addAll(node.formLeaves()) }
+                is CFGBodyNode -> if (node != this) { list.addAll(node.leaves()) }
                 is CFGNonBodyNode -> if (node.links.none { it.to != node }) { list.add(node) }
             }
         }

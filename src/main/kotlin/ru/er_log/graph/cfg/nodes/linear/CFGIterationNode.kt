@@ -8,8 +8,18 @@ abstract class CFGIterationNode(context: Int, deepness: Int, title: String = "it
     CFGBodyNode(context, deepness, title, StyleCatalogue.NodeStyles.iteration)
 {
     override fun onClose() {
-        leaves().forEach { it.link(body.first(), CFGLink.LinkType.DIR_BACK) }
+        nodesForLinking().forEach { it.link(body.first(), CFGLink.LinkType.DIR_BACK) }
     }
+
+//    override fun leaves(): MutableSet<CFGNode> {
+//        return mutableSetOf()
+//    }
+//
+//    override fun nodesForLinking(): MutableSet<CFGNode> {
+//        val nodes = super.nodesForLinking()
+//        nodes.add(this)
+//        return nodes
+//    }
 }
 
 data class CFGNodeForStatement(
@@ -33,7 +43,7 @@ data class CFGNodeDoWhileStatement(
     override fun onEnter() {}
 
     override fun onClose() {
-        leaves().forEach { it.link(this) }
+        nodesForLinking().forEach { it.link(this) }
         body.add(this)
         this.link(body.first(), CFGLink.LinkType.DIR_BACK)
     }
