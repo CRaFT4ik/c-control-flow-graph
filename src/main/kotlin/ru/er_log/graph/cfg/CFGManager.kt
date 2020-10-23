@@ -72,11 +72,15 @@ data class CFGResult(
             return colorPool[obj.hashCode().absoluteValue % colorPool.size]
         }
 
+        fun String.normalize(): String {
+            return this.replace("\"", "\\\"")
+        }
+
         fun title(node: CFGNode): String {
             val titleBuilder = StringBuilder()
             titleBuilder.append("\"")
-            if (node.title.isNotBlank()) { titleBuilder.append(node.title).append(" :: ") }
             titleBuilder.append(node.uid)
+            if (node.title.isNotBlank()) { titleBuilder.append(" :: ").append(node.title.normalize()) }
             titleBuilder.append("\"")
             return titleBuilder.toString()
         }

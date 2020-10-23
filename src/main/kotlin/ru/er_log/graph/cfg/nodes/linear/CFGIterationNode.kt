@@ -56,6 +56,19 @@ data class CFGNodeForStatement(
     override val deepness: Int,
     override val title: String = "for statement"
 ) : CFGIterationNode(context, deepness, title)
+{
+    override fun onEnter() {}
+
+    override fun onClose() {
+        if (body.isEmpty()) { body.add(this); }
+
+        val root = body.first()
+        val leaves = nodesForLinking()
+
+        if (leaves.size > 1 && leaves.contains(root)) { leaves.remove(root) }
+        leaves.forEach { it.link(root, CFGLink.LinkType.DIR_BACK) }
+    }
+}
 
 data class CFGNodeWhileStatement(
     override val context: Int,

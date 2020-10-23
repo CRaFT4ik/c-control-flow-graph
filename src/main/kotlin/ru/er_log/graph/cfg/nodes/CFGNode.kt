@@ -35,7 +35,14 @@ sealed class CFGNode(
     val lastLinked: CFGNode?
         get() = linked.lastOrNull()?.to
 
+    /**
+     * Определяет, может ли текущий узел быть привзяан к [to].
+     */
+    open fun linkable(to: CFGNode): Boolean = true
+
     open fun link(other: CFGNode, vararg type: CFGLink.LinkType) {
+        if (!linkable(other)) { return }
+
         val style = CFGLink.calculateLinkStyle(*type)
         links.add(CFGLink(other, style))
         other.linked.add(CFGLink(this, style))
@@ -48,7 +55,7 @@ sealed class CFGNode(
 }
 
 /**
- * Узел с нелинейным выполнением.
+ * Узел, который не может содержать в себе других узлов.
  */
 abstract class CFGNonBodyNode(
     context: Int,
@@ -56,19 +63,9 @@ abstract class CFGNonBodyNode(
     title: String,
     style: NodeStyle = StyleCatalogue.NodeStyles.default
 ) : CFGNode(context, deepness, title, style)
-{
-    /**
-     * Определяет, может ли текущий узел быть привзяан к [to].
-     */
-    open fun linkable(to: CFGNode): Boolean = true
-
-    override fun link(other: CFGNode, vararg type: CFGLink.LinkType) {
-        if (linkable(other)) { super.link(other, *type) }
-    }
-}
 
 /**
- * Узел с линейным выполнением.
+ * Узел, который может содержать в себе другие узлы.
  */
 abstract class CFGBodyNode(
     context: Int,

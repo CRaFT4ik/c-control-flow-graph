@@ -13,7 +13,7 @@ abstract class CFGJumpNode(
     style: NodeStyle = StyleCatalogue.NodeStyles.jump
 ) : CFGNonBodyNode(context, deepness, title, style)
 {
-    override fun linkable(to: CFGNode): Boolean = when (to) {
+    override fun linkable(to: CFGNode): Boolean = when(to) {
         is CFGIterationNode -> true
         else -> false
     }
