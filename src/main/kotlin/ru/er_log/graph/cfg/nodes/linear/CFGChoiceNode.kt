@@ -33,9 +33,29 @@ abstract class CFGChoiceNode(context: Int, deepness: Int, title: String = "choic
     }
 }
 
-data class CFGNodeIfStatement       (override val context: Int, override val deepness: Int, override val title: String = "if statement")        : CFGChoiceNode(context, deepness, title)
-data class CFGNodeElseIfStatement   (override val context: Int, override val deepness: Int, override val title: String = "else if statement")   : CFGChoiceNode(context, deepness, title)
-data class CFGNodeElseStatement     (override val context: Int, override val deepness: Int, override val title: String = "else statement")      : CFGChoiceNode(context, deepness, title)
+data class CFGNodeIfStatement(
+    override val context: Int,
+    override val deepness: Int,
+    private val _title: String = "if statement"
+) : CFGChoiceNode(context, deepness, _title)
+{
+    override val title = "if ($_title)"
+}
+
+data class CFGNodeElseIfStatement(
+    override val context: Int,
+    override val deepness: Int,
+    private val _title: String = "else if statement"
+) : CFGChoiceNode(context, deepness, _title)
+{
+    override val title = "else if ($_title)"
+}
+
+data class CFGNodeElseStatement(
+    override val context: Int,
+    override val deepness: Int,
+    private val _title: String = "else statement"
+) : CFGChoiceNode(context, deepness, _title)
 {
     override fun onEnter() {}
 }
