@@ -1,5 +1,6 @@
 package ru.er_log.graph.cfg.nodes.linear
 
+import ru.er_log.graph.LinkStyle
 import ru.er_log.graph.NodeStyle
 import ru.er_log.graph.StyleCatalogue
 import ru.er_log.graph.cfg.nodes.CFGBodyNode
@@ -15,7 +16,7 @@ abstract class CFGIterationNode(
 ) : CFGBodyNode(context, deepness, title, style)
 {
     override fun onClose() {
-        nodesForLinking().forEach { it.link(body.first(), CFGLink.LinkType.DIR_BACK) }
+        nodesForLinking().forEach { it.link(body.first(), null, CFGLink.LinkType.DIR_BACK) }
     }
 
     /** Смотреть описание [leaves]. */
@@ -59,21 +60,15 @@ abstract class CFGIterationNode(
 data class CFGNodeForStatement(
     override val context: Int,
     override val deepness: Int,
-    private val _title: String = "for statement"
-) : CFGIterationNode(context, deepness, _title)
+    private val _title: String = "for statement",
+    override val style: NodeStyle = StyleCatalogue.NodeStyles.choiceInCycle
+) : CFGIterationNode(context, deepness, _title, style)
 {
-    override val title = "for ($_title)"
+    override val title = "if ($_title)"
 
-    override fun onEnter() {}
-
-    override fun onClose() {
-        if (body.isEmpty()) { body.add(this); }
-
-        val root = body.first()
-        val leaves = nodesForLinking()
-
-        if (leaves.size > 1 && leaves.contains(root)) { leaves.remove(root) }
-        leaves.forEach { it.link(root, CFGLink.LinkType.DIR_BACK) }
+    override fun link(other: CFGNode, defStyle: LinkStyle?, vararg type: CFGLink.LinkType) {
+        val linkStyle = if (other.linked.isEmpty()) { StyleCatalogue.LinkStyles.succeed } else { defStyle }
+        super.link(other, linkStyle)
     }
 }
 
@@ -99,8 +94,8 @@ data class CFGNodeDoWhileStatement(
     override fun onEnter() {}
 
     override fun onClose() {
-        nodesForLinking().forEach { it.link(this) }
+        nodesForLinking().forEach { it.link(this, null, CFGLink.LinkType.DIR_BACK) }
         body.add(this)
-        this.link(body.first(), CFGLink.LinkType.DIR_BACK)
+        this.link(body.first(), null, CFGLink.LinkType.DIR_PRIM)
     }
 }

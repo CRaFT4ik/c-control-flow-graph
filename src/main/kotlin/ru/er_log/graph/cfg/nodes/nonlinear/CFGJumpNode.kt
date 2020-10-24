@@ -3,6 +3,7 @@ package ru.er_log.graph.cfg.nodes.nonlinear
 import ru.er_log.graph.LinkStyle
 import ru.er_log.graph.NodeStyle
 import ru.er_log.graph.StyleCatalogue
+import ru.er_log.graph.cfg.nodes.CFGLink
 import ru.er_log.graph.cfg.nodes.CFGNode
 import ru.er_log.graph.cfg.nodes.CFGNonBodyNode
 import ru.er_log.graph.cfg.nodes.linear.CFGIterationNode
@@ -22,13 +23,13 @@ abstract class CFGJumpNode(
     }
 
     /** Передаем все узлы, привязанные к данному, узлу наследнику. */
-    override fun link(other: CFGNode, style: LinkStyle) {
+    override fun link(other: CFGNode, defStyle: LinkStyle?, vararg type: CFGLink.LinkType) {
         if (!linkable(other)) { return }
 
         while(this.linked.size > 0) {
             val link = this.linked.first()
             link.to.unlink(this)
-            link.to.link(other, link.style)
+            link.to.link(other, link.style, CFGLink.LinkType.NONLINEAR)
         }
     }
 }
@@ -80,3 +81,8 @@ data class CFGNodeFunctionCall(
     override val deepness: Int,
     override val title: String = "function call"
 ) : CFGNonBodyNode(context, deepness, title)
+{
+    override fun link(other: CFGNode, defStyle: LinkStyle?, vararg type: CFGLink.LinkType) {
+        super.link(other, defStyle, CFGLink.LinkType.NONLINEAR)
+    }
+}

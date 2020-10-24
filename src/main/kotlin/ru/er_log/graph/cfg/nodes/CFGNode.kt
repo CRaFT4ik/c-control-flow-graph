@@ -40,15 +40,12 @@ sealed class CFGNode(
      */
     open fun linkable(to: CFGNode): Boolean = true
 
-    open fun link(other: CFGNode, style: LinkStyle) {
+    open fun link(other: CFGNode, defStyle: LinkStyle? = null, vararg type: CFGLink.LinkType) {
         if (!linkable(other)) { return }
 
-        links.add(CFGLink(other, style))
-        other.linked.add(CFGLink(this, style))
-    }
-
-    fun link(other: CFGNode, vararg type: CFGLink.LinkType) {
-        link(other, CFGLink.calculateLinkStyle(*type))
+        val linkStyle = CFGLink.calculateLinkStyle(defStyle, *type)
+        links.add(CFGLink(other, linkStyle))
+        other.linked.add(CFGLink(this, linkStyle))
     }
 
     open fun unlink(other: CFGNode) {
@@ -111,7 +108,7 @@ abstract class CFGBodyNode(
             else -> other
         }
 
-        nodesForLinking().forEach { it.link(linkTo, linkType) }
+        nodesForLinking().forEach { it.link(linkTo, null, linkType) }
         body.add(other)
     }
 

@@ -600,7 +600,11 @@ externalDeclaration
     ;
 
 functionDefinition
-    :   declarationSpecifiers? declarator declarationList? compoundStatement
+    :   functionDefinitionName compoundStatement
+    ;
+
+functionDefinitionName
+    :   declarationSpecifiers? declarator declarationList?
     ;
 
 declarationList

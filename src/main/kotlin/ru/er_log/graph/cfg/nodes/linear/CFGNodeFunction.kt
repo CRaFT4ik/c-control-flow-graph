@@ -12,7 +12,7 @@ data class CFGNodeFunction(
 ) : CFGBodyNode(context, deepness, title, style)
 {
     override fun onClose() {
-        val exitNode = this.copy(title = "end $title", style = StyleCatalogue.NodeStyles.functionEnd)
+        val exitNode = this.copy(title = "$title :: end", style = StyleCatalogue.NodeStyles.functionEnd)
         nodesForLinking().forEach { it.link(exitNode) }
         body.add(exitNode)
     }

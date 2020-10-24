@@ -29,6 +29,8 @@ class StyleCatalogue
 
         companion object {
             val default = LinkStyle(ColorPalette.GREY, Style.SOLID)
+            val dashed = LinkStyle(ColorPalette.GREY, Style.DASHED)
+            val succeed = LinkStyle(ColorPalette.GREEN, Style.SOLID)
         }
     }
 

@@ -2,10 +2,8 @@ package ru.er_log.graph.cfg
 
 import org.antlr.v4.runtime.ParserRuleContext
 import org.antlr.v4.runtime.misc.Interval
-import org.antlr.v4.runtime.tree.TerminalNode
 import ru.er_log.antlr.gen.c.CBaseListener
 import ru.er_log.antlr.gen.c.CParser
-import ru.er_log.graph.StyleCatalogue
 import ru.er_log.graph.cfg.nodes.CFGNode
 import ru.er_log.graph.cfg.nodes.linear.*
 import ru.er_log.graph.cfg.nodes.nonlinear.*
@@ -16,10 +14,11 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
 {
     private val stack: Stack<CFGNode> = Stack()
 
-    private fun getText(ctx: ParserRuleContext): String {
-        val interval = Interval(ctx.start.startIndex, ctx.stop.stopIndex)
-        return ctx.start.inputStream.getText(interval).trim()
-    }
+    private val ParserRuleContext.name: String
+        get() {
+            val interval = Interval(this.start.startIndex, this.stop.stopIndex)
+            return this.start.inputStream.getText(interval).trim()
+        }
 
     /** Начало и конец парсинга. */
 
@@ -34,8 +33,7 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
     /** Определение функции. */
 
     override fun enterFunctionDefinition(ctx: CParser.FunctionDefinitionContext) {
-        val origin: TerminalNode = ctx.declarator().directDeclarator().directDeclarator().Identifier()
-        val node = CFGNodeFunction(ctx.altNumber, stack.size, origin.text + "(...)")
+        val node = CFGNodeFunction(ctx.altNumber, stack.size, ctx.functionDefinitionName().name)
         graph.enter(stack.push(node))
     }
 
@@ -51,7 +49,7 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
 
     override fun enterIfStatement(ctx: CParser.IfStatementContext) {
         val expression = ctx.children.filterIsInstance<CParser.ExpressionContext>().first()
-        val node = CFGNodeIfStatement(ctx.altNumber, stack.size, getText(expression))
+        val node = CFGNodeIfStatement(ctx.altNumber, stack.size, expression.name)
         graph.enter(stack.push(node))
     }
 
@@ -63,7 +61,7 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
 
     override fun enterElseIfStatement(ctx: CParser.ElseIfStatementContext) {
         val expression = ctx.children.filterIsInstance<CParser.ExpressionContext>().first()
-        val node = CFGNodeElseIfStatement(ctx.altNumber, stack.size, getText(expression))
+        val node = CFGNodeElseIfStatement(ctx.altNumber, stack.size, expression.name)
         graph.enter(stack.push(node))
     }
 
@@ -101,18 +99,16 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
             _exitForStepInitialValue(it)
         }
 
-        val node = CFGNodeForStatement(ctx.altNumber, stack.size, getText(conditionSteps))
-        graph.enter(stack.push(node))
+        if (stepInitialValue?.name?.contains("int") == true)
+            print(1)
 
-        stepCondition?.let {
-            _enterForStepCondition(it)
-        }
+        val node = CFGNodeForStatement(ctx.altNumber, stack.size, stepCondition?.name ?: "true")
+        graph.enter(stack.push(node))
     }
 
     override fun exitForStatement(ctx: CParser.ForStatementContext) {
         /* Находим следующее: for (conditionSteps) == for (начальное_значение; stepCondition; приращение) */
         val conditionSteps = ctx.children.filterIsInstance<CParser.ForConditionStepsContext>().first()
-        val stepCondition = conditionSteps.children.filterIsInstance<CParser.ForStepConditionContext>().firstOrNull()
         val stepIncrement = conditionSteps.children.filterIsInstance<CParser.ForStepIncrementContext>().firstOrNull()
 
         stepIncrement?.let {
@@ -120,15 +116,11 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
             _exitForStepIncrement(it)
         }
 
-        stepCondition?.let {
-            _exitForStepCondition(it)
-        }
-
         graph.close(stack.pop())
     }
 
     private fun _enterForStepInitialValue(ctx: CParser.ForStepInitialValueContext) {
-        val node = CFGNodeCodeBlock(ctx.altNumber, stack.size, getText(ctx))
+        val node = CFGNodeCodeBlock(ctx.altNumber, stack.size, ctx.name)
         graph.enter(stack.push(node))
     }
 
@@ -136,17 +128,8 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
         graph.close(stack.pop())
     }
 
-    private fun _enterForStepCondition(ctx: CParser.ForStepConditionContext) {
-        val node = CFGNodeIfStatement(ctx.altNumber, stack.size, getText(ctx), StyleCatalogue.NodeStyles.choiceInCycle)
-        graph.enter(stack.push(node))
-    }
-
-    private fun _exitForStepCondition(ctx: CParser.ForStepConditionContext) {
-        graph.close(stack.pop())
-    }
-
     private fun _enterForStepIncrement(ctx: CParser.ForStepIncrementContext) {
-        val node = CFGNodeCodeBlock(ctx.altNumber, stack.size, getText(ctx))
+        val node = CFGNodeCodeBlock(ctx.altNumber, stack.size, ctx.name)
         graph.enter(stack.push(node))
     }
 
@@ -158,7 +141,7 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
 
     override fun enterWhileStatement(ctx: CParser.WhileStatementContext) {
         val expression = ctx.children.filterIsInstance<CParser.ExpressionContext>().first()
-        val node = CFGNodeWhileStatement(ctx.altNumber, stack.size, getText(expression))
+        val node = CFGNodeWhileStatement(ctx.altNumber, stack.size, expression.name)
         graph.enter(stack.push(node))
     }
 
@@ -170,7 +153,7 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
 
     override fun enterDoWhileStatement(ctx: CParser.DoWhileStatementContext) {
         val expression = ctx.children.filterIsInstance<CParser.ExpressionContext>().first()
-        val node = CFGNodeDoWhileStatement(ctx.altNumber, stack.size, getText(expression))
+        val node = CFGNodeDoWhileStatement(ctx.altNumber, stack.size,expression.name)
         graph.enter(stack.push(node))
     }
 
@@ -185,7 +168,7 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
     /** Вызов функции. */
 
     override fun enterFunctionCall(ctx: CParser.FunctionCallContext) {
-        val node = CFGNodeFunctionCall(ctx.altNumber, stack.size, getText(ctx))
+        val node = CFGNodeFunctionCall(ctx.altNumber, stack.size, ctx.name)
         graph.enter(stack.push(node))
     }
 
