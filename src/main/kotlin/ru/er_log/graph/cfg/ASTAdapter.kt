@@ -5,6 +5,7 @@ import org.antlr.v4.runtime.misc.Interval
 import org.antlr.v4.runtime.tree.TerminalNode
 import ru.er_log.antlr.gen.c.CBaseListener
 import ru.er_log.antlr.gen.c.CParser
+import ru.er_log.graph.StyleCatalogue
 import ru.er_log.graph.cfg.nodes.CFGNode
 import ru.er_log.graph.cfg.nodes.linear.*
 import ru.er_log.graph.cfg.nodes.nonlinear.*
@@ -100,7 +101,7 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
             _exitForStepInitialValue(it)
         }
 
-        val node = CFGNodeForStatement(ctx.altNumber, stack.size)
+        val node = CFGNodeForStatement(ctx.altNumber, stack.size, getText(conditionSteps))
         graph.enter(stack.push(node))
 
         stepCondition?.let {
@@ -136,7 +137,7 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
     }
 
     private fun _enterForStepCondition(ctx: CParser.ForStepConditionContext) {
-        val node = CFGNodeIfStatement(ctx.altNumber, stack.size, getText(ctx))
+        val node = CFGNodeIfStatement(ctx.altNumber, stack.size, getText(ctx), StyleCatalogue.NodeStyles.choiceInCycle)
         graph.enter(stack.push(node))
     }
 
@@ -156,7 +157,8 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
     /** Инструкция WHILE. */
 
     override fun enterWhileStatement(ctx: CParser.WhileStatementContext) {
-        val node = CFGNodeWhileStatement(ctx.altNumber, stack.size)
+        val expression = ctx.children.filterIsInstance<CParser.ExpressionContext>().first()
+        val node = CFGNodeWhileStatement(ctx.altNumber, stack.size, getText(expression))
         graph.enter(stack.push(node))
     }
 
@@ -167,7 +169,8 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
     /** Инструкция DO WHILE. */
 
     override fun enterDoWhileStatement(ctx: CParser.DoWhileStatementContext) {
-        val node = CFGNodeDoWhileStatement(ctx.altNumber, stack.size)
+        val expression = ctx.children.filterIsInstance<CParser.ExpressionContext>().first()
+        val node = CFGNodeDoWhileStatement(ctx.altNumber, stack.size, getText(expression))
         graph.enter(stack.push(node))
     }
 

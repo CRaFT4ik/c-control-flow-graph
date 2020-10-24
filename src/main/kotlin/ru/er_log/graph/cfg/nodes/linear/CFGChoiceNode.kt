@@ -1,12 +1,17 @@
 package ru.er_log.graph.cfg.nodes.linear
 
+import ru.er_log.graph.NodeStyle
 import ru.er_log.graph.StyleCatalogue
 import ru.er_log.graph.cfg.nodes.CFGBodyNode
 import ru.er_log.graph.cfg.nodes.CFGLink
 import ru.er_log.graph.cfg.nodes.CFGNode
 
-abstract class CFGChoiceNode(context: Int, deepness: Int, title: String = "choice statement") :
-    CFGBodyNode(context, deepness, title, StyleCatalogue.NodeStyles.choice)
+abstract class CFGChoiceNode(
+    context: Int,
+    deepness: Int,
+    title: String = "choice statement",
+    style: NodeStyle = StyleCatalogue.NodeStyles.choice
+) : CFGBodyNode(context, deepness, title, style)
 {
     private var closed = false
 
@@ -36,8 +41,9 @@ abstract class CFGChoiceNode(context: Int, deepness: Int, title: String = "choic
 data class CFGNodeIfStatement(
     override val context: Int,
     override val deepness: Int,
-    private val _title: String = "if statement"
-) : CFGChoiceNode(context, deepness, _title)
+    private val _title: String = "if statement",
+    override val style: NodeStyle = StyleCatalogue.NodeStyles.choice
+) : CFGChoiceNode(context, deepness, _title, style)
 {
     override val title = "if ($_title)"
 }

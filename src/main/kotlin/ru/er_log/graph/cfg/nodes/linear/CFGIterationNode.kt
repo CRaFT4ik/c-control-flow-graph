@@ -1,13 +1,18 @@
 package ru.er_log.graph.cfg.nodes.linear
 
+import ru.er_log.graph.NodeStyle
 import ru.er_log.graph.StyleCatalogue
 import ru.er_log.graph.cfg.nodes.CFGBodyNode
 import ru.er_log.graph.cfg.nodes.CFGLink
 import ru.er_log.graph.cfg.nodes.CFGNode
 import java.util.*
 
-abstract class CFGIterationNode(context: Int, deepness: Int, title: String = "iteration statement") :
-    CFGBodyNode(context, deepness, title, StyleCatalogue.NodeStyles.iteration)
+abstract class CFGIterationNode(
+    context: Int,
+    deepness: Int,
+    title: String = "iteration statement",
+    style: NodeStyle = StyleCatalogue.NodeStyles.iteration
+) : CFGBodyNode(context, deepness, title, style)
 {
     override fun onClose() {
         nodesForLinking().forEach { it.link(body.first(), CFGLink.LinkType.DIR_BACK) }
@@ -54,9 +59,11 @@ abstract class CFGIterationNode(context: Int, deepness: Int, title: String = "it
 data class CFGNodeForStatement(
     override val context: Int,
     override val deepness: Int,
-    override val title: String = "for statement"
-) : CFGIterationNode(context, deepness, title)
+    private val _title: String = "for statement"
+) : CFGIterationNode(context, deepness, _title)
 {
+    override val title = "for ($_title)"
+
     override fun onEnter() {}
 
     override fun onClose() {
@@ -73,15 +80,22 @@ data class CFGNodeForStatement(
 data class CFGNodeWhileStatement(
     override val context: Int,
     override val deepness: Int,
-    override val title: String = "while statement"
-) : CFGIterationNode(context, deepness, title)
+    private val _title: String = "while statement",
+    override val style: NodeStyle = StyleCatalogue.NodeStyles.choiceInCycle
+) : CFGIterationNode(context, deepness, _title, style)
+{
+    override val title = "while ($_title)"
+}
 
 data class CFGNodeDoWhileStatement(
     override val context: Int,
     override val deepness: Int,
-    override val title: String = "do while statement"
-) : CFGIterationNode(context, deepness, title)
+    private val _title: String = "do while statement",
+    override val style: NodeStyle = StyleCatalogue.NodeStyles.choiceInCycle
+) : CFGIterationNode(context, deepness, _title, style)
 {
+    override val title = "while ($_title)"
+
     override fun onEnter() {}
 
     override fun onClose() {

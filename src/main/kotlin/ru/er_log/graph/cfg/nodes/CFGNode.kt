@@ -1,6 +1,6 @@
 package ru.er_log.graph.cfg.nodes
 
-import com.github.aakira.napier.Napier
+import ru.er_log.graph.LinkStyle
 import ru.er_log.graph.NodeStyle
 import ru.er_log.graph.StyleCatalogue
 import ru.er_log.graph.cfg.nodes.nonlinear.CFGJumpNode
@@ -29,7 +29,7 @@ sealed class CFGNode(
     val links: MutableList<CFGLink> = mutableListOf(),
 
     /** Список узлов, которые ссылаются на данный узел. */
-    val linked: Stack<CFGLink> = Stack()
+    val linked: MutableList<CFGLink> = mutableListOf()
 ) {
     /** Крайний узел, к которому был привязан данный. */
     val lastLinked: CFGNode?
@@ -40,12 +40,20 @@ sealed class CFGNode(
      */
     open fun linkable(to: CFGNode): Boolean = true
 
-    open fun link(other: CFGNode, vararg type: CFGLink.LinkType) {
+    open fun link(other: CFGNode, style: LinkStyle) {
         if (!linkable(other)) { return }
 
-        val style = CFGLink.calculateLinkStyle(*type)
         links.add(CFGLink(other, style))
         other.linked.add(CFGLink(this, style))
+    }
+
+    fun link(other: CFGNode, vararg type: CFGLink.LinkType) {
+        link(other, CFGLink.calculateLinkStyle(*type))
+    }
+
+    open fun unlink(other: CFGNode) {
+        links.removeIf { it.to == other }
+        other.linked.removeIf { it.to == this }
     }
 
     companion object {
@@ -84,7 +92,6 @@ abstract class CFGBodyNode(
      * Вызывается при создании данного составного узла.
      */
     open fun onEnter() {
-        Napier.i("enter in ${this.title}")
         body.add(this)
     }
 
@@ -93,15 +100,12 @@ abstract class CFGBodyNode(
      * Гарантирует, что после вызова данного метода [body] пополняться не будет.
      */
     open fun onClose() {
-        Napier.w("exit from ${this.title}")
     }
 
     /**
      * Вызывается, когда необходимо вставить элемент [other] внутрь данного узла.
      */
     open fun push(other: CFGNode, linkType: CFGLink.LinkType = CFGLink.LinkType.DEFAULT) {
-        Napier.v("  pushed ${other.title} into ${this.title}")
-
         val linkTo = when (other) {
             is CFGBodyNode -> other.body.first()
             else -> other
