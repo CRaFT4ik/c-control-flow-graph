@@ -16,37 +16,42 @@ This graph shows the result for this `C` code:
 ```C
 int main()
 {
-    call1();
-    call2();
-    call3();
+	call1();
+	call2();
+label:
+	call3();
 
     if (true) { call1(); }
     do { call2(); } while (true);
 
-    for(;;) {
-        if (true) {
-            if (true) printif();
-            test2();
-
+	for (int i = 0; i < 10; i++) {
+		if (true) {
+			if (true) printif();
+			test2();
+            break;
+			
             if (true) printif();
             else test2();
-        }
-        // Comment block
-        else if (true) {
-            for(;;) { doo(); }
-            do { doo(); } while(true); /* This is comment. */
-            while(true) { do { doo(); } while(true); }
-        }
-        else printif3();
+		}
+		// Comment block
+		else if (true) {
+		    for(;;) { doo(); }
+		    do { doo(); continue; lol(); } while(true); /* This is comment. */
+		    while(true) { do { doo(); } while(true); }
+		}
+		else {
+		    goto label;
+		    printif3();
+		}
 
-        if (true) { return; }
-    }
-    
-    call5();
-    call6();
+		if (true) { return; }
+	}
+
+	call5();
+	call6();
 }
 
 int onemorefunc() {
-    dodo();
+	dodo();
 }
 ```
