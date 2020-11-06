@@ -99,9 +99,6 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
             _exitForStepInitialValue(it)
         }
 
-        if (stepInitialValue?.name?.contains("int") == true)
-            print(1)
-
         val node = CFGNodeForStatement(ctx.altNumber, stack.size, stepCondition?.name ?: "true")
         graph.enter(stack.push(node))
     }
@@ -153,7 +150,7 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
 
     override fun enterDoWhileStatement(ctx: CParser.DoWhileStatementContext) {
         val expression = ctx.children.filterIsInstance<CParser.ExpressionContext>().first()
-        val node = CFGNodeDoWhileStatement(ctx.altNumber, stack.size,expression.name)
+        val node = CFGNodeDoWhileStatement(ctx.altNumber, stack.size, expression.name)
         graph.enter(stack.push(node))
     }
 
@@ -176,10 +173,22 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
         graph.close(stack.pop())
     }
 
+    /** Метка. */
+
+    override fun enterLabeledStatement(ctx: CParser.LabeledStatementContext) {
+        val node = CFGNodeLabel(ctx.altNumber, stack.size, ctx.Identifier().text)
+        graph.enter(stack.push(node))
+    }
+
+
+    override fun exitLabeledStatement(ctx: CParser.LabeledStatementContext) {
+        graph.close(stack.pop())
+    }
+
     /** Инструкция GOTO. */
 
     override fun enterGotoStatement(ctx: CParser.GotoStatementContext) {
-        val node = CFGNodeGotoStatement(ctx.altNumber, stack.size)
+        val node = CFGNodeGotoStatement(ctx.altNumber, stack.size, ctx.Identifier().text)
         graph.enter(stack.push(node))
     }
 

@@ -5,6 +5,7 @@ import ru.er_log.graph.NodeStyle
 import ru.er_log.graph.StyleCatalogue
 import ru.er_log.graph.cfg.nodes.nonlinear.CFGJumpNode
 import java.util.*
+import kotlin.reflect.KClass
 
 sealed class CFGNode(
     /** Контекст (uuid) создания узла.
@@ -38,10 +39,10 @@ sealed class CFGNode(
     /**
      * Определяет, может ли текущий узел быть привзяан к [to].
      */
-    open fun linkable(to: CFGNode): Boolean = true
+    open fun isLinkable(to: CFGNode): Boolean = true
 
     open fun link(other: CFGNode, defStyle: LinkStyle? = null, vararg type: CFGLink.LinkType) {
-        if (!linkable(other)) { return }
+        if (!isLinkable(other)) { return }
 
         val linkStyle = CFGLink.calculateLinkStyle(defStyle, *type)
         links.add(CFGLink(other, linkStyle))
@@ -144,5 +145,23 @@ abstract class CFGBodyNode(
             }
         }
         return list
+    }
+
+    /**
+     * Рекурсивно собирает все узлы заданного типа в каждом из дочерних узлов.
+     *
+     * @param result возвращаемый список, по умолчанию пустой
+     * @return заполненный список [result]
+     */
+    inline fun <reified T : CFGNode> collectAllNodes(result: MutableList<T> = mutableListOf())
+            = collectAllNodes(T::class, result)
+
+    fun <T : CFGNode> collectAllNodes(type: KClass<T>, result: MutableList<T>): List<T> {
+        body.forEach { node ->
+            if (type.isInstance(node)) { result.add(node as T) }
+            if (node === this) return@forEach
+            if (node is CFGBodyNode) { node.collectAllNodes(type, result) }
+        }
+        return result
     }
 }
