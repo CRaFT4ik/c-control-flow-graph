@@ -95,8 +95,3 @@ data class CFGNodeFunctionCall(
     override val deepness: Int,
     override val title: String = "function call"
 ) : CFGNonBodyNode(context, deepness, title)
-{
-    override fun link(other: CFGNode, defStyle: LinkStyle?, vararg type: CFGLink.LinkType) {
-        super.link(other, defStyle, CFGLink.LinkType.NONLINEAR)
-    }
-}

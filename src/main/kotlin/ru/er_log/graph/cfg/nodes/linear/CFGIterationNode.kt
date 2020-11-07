@@ -58,17 +58,30 @@ abstract class CFGIterationNode(
 }
 
 data class CFGNodeForStatement(
+    val nodeType: NodeType,
     override val context: Int,
     override val deepness: Int,
     private val _title: String = "for statement",
-    override val style: NodeStyle = StyleCatalogue.NodeStyles.choiceInCycle
+    override val style: NodeStyle = if (nodeType === NodeType.CONDITION) {
+        StyleCatalogue.NodeStyles.choiceInCycle
+    } else {
+        StyleCatalogue.NodeStyles.default
+    }
 ) : CFGIterationNode(context, deepness, _title, style)
 {
-    override val title = "if ($_title)"
+    enum class NodeType { INITIAL, CONDITION, INCREMENT }
+
+    override val title = if (nodeType === NodeType.CONDITION) "if ($_title)" else _title
+
+    override fun onClose() {
+        if (nodeType !== NodeType.CONDITION) return
+        nodesForLinking().forEach { it.link(body.first(), null, CFGLink.LinkType.DIR_BACK) }
+    }
 
     override fun link(other: CFGNode, defStyle: LinkStyle?, vararg type: CFGLink.LinkType) {
-        val linkStyle = if (other.linked.isEmpty()) { StyleCatalogue.LinkStyles.succeed } else { defStyle }
-        super.link(other, linkStyle)
+        val linkStyle = if (nodeType === NodeType.CONDITION && this.linked.isEmpty()) { StyleCatalogue.LinkStyles.succeed } else { defStyle }
+        val linkType = if (nodeType === NodeType.INCREMENT && this.linked.isEmpty()) { CFGLink.LinkType.DIR_BACK } else  { CFGLink.LinkType.DEFAULT }
+        super.link(other, linkStyle, *type, linkType)
     }
 }
 

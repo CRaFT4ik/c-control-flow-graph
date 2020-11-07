@@ -30,11 +30,11 @@ class CFGLink(val to: CFGNode, val style: LinkStyle)
             }
 
             val colorStyle = when {
-                style != null -> style.color
                 0 != type and LinkType.DIR_PRIM.flag -> StyleCatalogue.ColorPalette.GREEN
                 0 != type and LinkType.DIR_ALTER.flag -> StyleCatalogue.ColorPalette.RED
                 0 != type and LinkType.DIR_JUMP.flag -> StyleCatalogue.ColorPalette.RED
                 0 != type and LinkType.DIR_BACK.flag -> StyleCatalogue.ColorPalette.BLUE
+                style != null -> style.color
                 else -> StyleCatalogue.ColorPalette.GREY
             }
 

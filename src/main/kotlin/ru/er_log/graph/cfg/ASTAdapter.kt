@@ -99,7 +99,7 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
             _exitForStepInitialValue(it)
         }
 
-        val node = CFGNodeForStatement(ctx.altNumber, stack.size, stepCondition?.name ?: "true")
+        val node = CFGNodeForStatement(CFGNodeForStatement.NodeType.CONDITION, ctx.altNumber, stack.size, stepCondition?.name ?: "true")
         graph.enter(stack.push(node))
     }
 
@@ -117,7 +117,7 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
     }
 
     private fun _enterForStepInitialValue(ctx: CParser.ForStepInitialValueContext) {
-        val node = CFGNodeCodeBlock(ctx.altNumber, stack.size, ctx.name)
+        val node = CFGNodeForStatement(CFGNodeForStatement.NodeType.INITIAL, ctx.altNumber, stack.size, ctx.name)
         graph.enter(stack.push(node))
     }
 
@@ -126,7 +126,7 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
     }
 
     private fun _enterForStepIncrement(ctx: CParser.ForStepIncrementContext) {
-        val node = CFGNodeCodeBlock(ctx.altNumber, stack.size, ctx.name)
+        val node = CFGNodeForStatement(CFGNodeForStatement.NodeType.INCREMENT, ctx.altNumber, stack.size, ctx.name)
         graph.enter(stack.push(node))
     }
 
