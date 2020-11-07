@@ -29,6 +29,8 @@ class StyleCatalogue
 
         companion object {
             val default = LinkStyle(ColorPalette.GREY, Style.SOLID)
+            val dashed = LinkStyle(ColorPalette.GREY, Style.DASHED)
+            val succeed = LinkStyle(ColorPalette.GREEN, Style.SOLID)
         }
     }
 
@@ -41,12 +43,14 @@ class StyleCatalogue
         }
 
         companion object {
-            val default     = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.LIGHT, Shape.BOX)
-            val function    = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.GREEN, Shape.BOX)
-            val choice      = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.LIGHT_D, Shape.DIAMOND)
-            val iteration   = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.BLUE, Shape.BOX)
-            val jump        = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.RED, Shape.BOX)
-            val breaks      = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.YELLOW, Shape.BOX)
+            val default         = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.LIGHT, Shape.BOX)
+            val function        = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.GREEN, Shape.BOX)
+            val functionEnd     = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.RED, Shape.BOX)
+            val choice          = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.LIGHT, Shape.DIAMOND)
+            val choiceInCycle   = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.BLUE, Shape.DIAMOND)
+            val iteration       = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.BLUE, Shape.BOX)
+            val jump            = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.RED, Shape.BOX)
+            val breaks          = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.YELLOW, Shape.BOX)
         }
     }
 }

@@ -530,16 +530,25 @@ doWhileStatement
     ;
 
 forStatement
-    :   For '(' forCondition ')' statement
+    :   For '(' forConditionSteps ')' statement
     ;
 
-//    |   'for' '(' expression? ';' expression?  ';' forUpdate? ')' statement
-//    |   For '(' declaration  expression? ';' expression? ')' statement
-
-forCondition
-	:   forDeclaration ';' forExpression? ';' forExpression?
-	|   expression? ';' forExpression? ';' forExpression?
+forConditionSteps
+	:   forStepInitialValue? ';' forStepCondition? ';' forStepIncrement?
 	;
+
+forStepInitialValue
+    :   forDeclaration
+    |   expression
+    ;
+
+forStepCondition
+    :   forExpression
+    ;
+
+forStepIncrement
+    :   forExpression
+    ;
 
 forDeclaration
     :   declarationSpecifiers initDeclaratorList
@@ -591,7 +600,11 @@ externalDeclaration
     ;
 
 functionDefinition
-    :   declarationSpecifiers? declarator declarationList? compoundStatement
+    :   functionDefinitionName compoundStatement
+    ;
+
+functionDefinitionName
+    :   declarationSpecifiers? declarator declarationList?
     ;
 
 declarationList

@@ -21,11 +21,11 @@ class CFGLink(val to: CFGNode, val style: LinkStyle)
     }
 
     companion object {
-        fun calculateLinkStyle(vararg types: LinkType) : LinkStyle {
+        fun calculateLinkStyle(style: LinkStyle? = null, vararg types: LinkType) : LinkStyle {
             val type = LinkType.fold(*types)
 
             val lineStyle = when {
-                0 != type and LinkType.NONLINEAR.flag -> StyleCatalogue.LinkStyles.Style.DOTTED
+                0 != type and LinkType.NONLINEAR.flag -> StyleCatalogue.LinkStyles.Style.DASHED
                 else -> StyleCatalogue.LinkStyles.Style.SOLID
             }
 
@@ -34,6 +34,7 @@ class CFGLink(val to: CFGNode, val style: LinkStyle)
                 0 != type and LinkType.DIR_ALTER.flag -> StyleCatalogue.ColorPalette.RED
                 0 != type and LinkType.DIR_JUMP.flag -> StyleCatalogue.ColorPalette.RED
                 0 != type and LinkType.DIR_BACK.flag -> StyleCatalogue.ColorPalette.BLUE
+                style != null -> style.color
                 else -> StyleCatalogue.ColorPalette.GREY
             }
 

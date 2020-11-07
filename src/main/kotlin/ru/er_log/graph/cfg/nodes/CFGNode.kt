@@ -1,10 +1,11 @@
 package ru.er_log.graph.cfg.nodes
 
-import com.github.aakira.napier.Napier
+import ru.er_log.graph.LinkStyle
 import ru.er_log.graph.NodeStyle
 import ru.er_log.graph.StyleCatalogue
 import ru.er_log.graph.cfg.nodes.nonlinear.CFGJumpNode
 import java.util.*
+import kotlin.reflect.KClass
 
 sealed class CFGNode(
     /** Контекст (uuid) создания узла.
@@ -29,16 +30,28 @@ sealed class CFGNode(
     val links: MutableList<CFGLink> = mutableListOf(),
 
     /** Список узлов, которые ссылаются на данный узел. */
-    val linked: Stack<CFGLink> = Stack()
+    val linked: MutableList<CFGLink> = mutableListOf()
 ) {
     /** Крайний узел, к которому был привязан данный. */
     val lastLinked: CFGNode?
         get() = linked.lastOrNull()?.to
 
-    open fun link(other: CFGNode, vararg type: CFGLink.LinkType) {
-        val style = CFGLink.calculateLinkStyle(*type)
-        links.add(CFGLink(other, style))
-        other.linked.add(CFGLink(this, style))
+    /**
+     * Определяет, может ли текущий узел быть привзяан к [to].
+     */
+    open fun isLinkable(to: CFGNode): Boolean = true
+
+    open fun link(other: CFGNode, defStyle: LinkStyle? = null, vararg type: CFGLink.LinkType) {
+        if (!isLinkable(other)) { return }
+
+        val linkStyle = CFGLink.calculateLinkStyle(defStyle, *type)
+        links.add(CFGLink(other, linkStyle))
+        other.linked.add(CFGLink(this, linkStyle))
+    }
+
+    open fun unlink(other: CFGNode) {
+        links.removeIf { it.to == other }
+        other.linked.removeIf { it.to == this }
     }
 
     companion object {
@@ -48,7 +61,7 @@ sealed class CFGNode(
 }
 
 /**
- * Узел с нелинейным выполнением.
+ * Узел, который не может содержать в себе других узлов.
  */
 abstract class CFGNonBodyNode(
     context: Int,
@@ -56,19 +69,9 @@ abstract class CFGNonBodyNode(
     title: String,
     style: NodeStyle = StyleCatalogue.NodeStyles.default
 ) : CFGNode(context, deepness, title, style)
-{
-    /**
-     * Определяет, может ли текущий узел быть привзяан к [to].
-     */
-    open fun linkable(to: CFGNode): Boolean = true
-
-    override fun link(other: CFGNode, vararg type: CFGLink.LinkType) {
-        if (linkable(other)) { super.link(other, *type) }
-    }
-}
 
 /**
- * Узел с линейным выполнением.
+ * Узел, который может содержать в себе другие узлы.
  */
 abstract class CFGBodyNode(
     context: Int,
@@ -87,7 +90,6 @@ abstract class CFGBodyNode(
      * Вызывается при создании данного составного узла.
      */
     open fun onEnter() {
-        Napier.i("enter in ${this.title}")
         body.add(this)
     }
 
@@ -96,21 +98,18 @@ abstract class CFGBodyNode(
      * Гарантирует, что после вызова данного метода [body] пополняться не будет.
      */
     open fun onClose() {
-        Napier.w("exit from ${this.title}")
     }
 
     /**
      * Вызывается, когда необходимо вставить элемент [other] внутрь данного узла.
      */
     open fun push(other: CFGNode, linkType: CFGLink.LinkType = CFGLink.LinkType.DEFAULT) {
-        Napier.v("  pushed ${other.title} into ${this.title}")
-
         val linkTo = when (other) {
             is CFGBodyNode -> other.body.first()
             else -> other
         }
 
-        nodesForLinking().forEach { it.link(linkTo, linkType) }
+        nodesForLinking().forEach { it.link(linkTo, null, linkType) }
         body.add(other)
     }
 
@@ -146,5 +145,23 @@ abstract class CFGBodyNode(
             }
         }
         return list
+    }
+
+    /**
+     * Рекурсивно собирает все узлы заданного типа в каждом из дочерних узлов.
+     *
+     * @param result возвращаемый список, по умолчанию пустой
+     * @return заполненный список [result]
+     */
+    inline fun <reified T : CFGNode> collectAllNodes(result: MutableList<T> = mutableListOf())
+            = collectAllNodes(T::class, result)
+
+    fun <T : CFGNode> collectAllNodes(type: KClass<T>, result: MutableList<T>): List<T> {
+        body.forEach { node ->
+            if (type.isInstance(node)) { result.add(node as T) }
+            if (node === this) return@forEach
+            if (node is CFGBodyNode) { node.collectAllNodes(type, result) }
+        }
+        return result
     }
 }

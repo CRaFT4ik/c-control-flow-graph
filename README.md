@@ -18,30 +18,34 @@ int main()
 {
     call1();
     call2();
+label:
     call3();
 
     if (true) { call1(); }
     do { call2(); } while (true);
 
-    for(;;) {
-        if (true) {
+    for(int i = 0; i < 10; i++) {
+        if (1*0 > 0) {
             if (true) printif();
             test2();
-
+            break;
             if (true) printif();
             else test2();
         }
         // Comment block
-        else if (true) {
+        else if (true && false) {
             for(;;) { doo(); }
-            do { doo(); } while(true); /* This is comment. */
-            while(true) { do { doo(); } while(true); }
+            do { doo(); continue; lol(); } while(10 > 5); /* This is comment. */
+            while(true == true) { do { doo(); } while(true); }
         }
-        else printif3();
+        else {
+            goto label;
+            printif3();
+        }
 
         if (true) { return; }
     }
-    
+
     call5();
     call6();
 }

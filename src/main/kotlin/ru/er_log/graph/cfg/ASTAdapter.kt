@@ -1,6 +1,7 @@
 package ru.er_log.graph.cfg
 
-import org.antlr.v4.runtime.tree.TerminalNode
+import org.antlr.v4.runtime.ParserRuleContext
+import org.antlr.v4.runtime.misc.Interval
 import ru.er_log.antlr.gen.c.CBaseListener
 import ru.er_log.antlr.gen.c.CParser
 import ru.er_log.graph.cfg.nodes.CFGNode
@@ -8,9 +9,16 @@ import ru.er_log.graph.cfg.nodes.linear.*
 import ru.er_log.graph.cfg.nodes.nonlinear.*
 import java.util.*
 
+
 class ASTAdapter(private val graph: CFGraph) : CBaseListener()
 {
     private val stack: Stack<CFGNode> = Stack()
+
+    private val ParserRuleContext.name: String
+        get() {
+            val interval = Interval(this.start.startIndex, this.stop.stopIndex)
+            return this.start.inputStream.getText(interval).trim()
+        }
 
     /** Начало и конец парсинга. */
 
@@ -25,8 +33,7 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
     /** Определение функции. */
 
     override fun enterFunctionDefinition(ctx: CParser.FunctionDefinitionContext) {
-        val origin: TerminalNode = ctx.declarator().directDeclarator().directDeclarator().Identifier()
-        val node = CFGNodeFunction(ctx.altNumber, stack.size, origin.text + "(...)")
+        val node = CFGNodeFunction(ctx.altNumber, stack.size, ctx.functionDefinitionName().name)
         graph.enter(stack.push(node))
     }
 
@@ -41,7 +48,8 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
     /** Инструкция IF. */
 
     override fun enterIfStatement(ctx: CParser.IfStatementContext) {
-        val node = CFGNodeIfStatement(ctx.altNumber, stack.size)
+        val expression = ctx.children.filterIsInstance<CParser.ExpressionContext>().first()
+        val node = CFGNodeIfStatement(ctx.altNumber, stack.size, expression.name)
         graph.enter(stack.push(node))
     }
 
@@ -52,7 +60,8 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
     /** Инструкция ELSE IF. */
 
     override fun enterElseIfStatement(ctx: CParser.ElseIfStatementContext) {
-        val node = CFGNodeElseIfStatement(ctx.altNumber, stack.size)
+        val expression = ctx.children.filterIsInstance<CParser.ExpressionContext>().first()
+        val node = CFGNodeElseIfStatement(ctx.altNumber, stack.size, expression.name)
         graph.enter(stack.push(node))
     }
 
@@ -78,18 +87,58 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
     /** Инструкция FOR. */
 
     override fun enterForStatement(ctx: CParser.ForStatementContext) {
-        val node = CFGNodeForStatement(ctx.altNumber, stack.size)
+        /* Находим следующее: for (conditionSteps) == for (stepInitialValue; stepCondition; приращение) */
+        val conditionSteps = ctx.children.filterIsInstance<CParser.ForConditionStepsContext>().first()
+        val stepInitialValue = conditionSteps.children.filterIsInstance<CParser.ForStepInitialValueContext>().firstOrNull()
+        val stepCondition = conditionSteps.children.filterIsInstance<CParser.ForStepConditionContext>().firstOrNull()
+
+        /** Есть ли необходимость вставлять код инициализации итератора цикла перед
+          * самим [CFGNodeForStatement] в графе? Если нет, следующий блок кода не нужен. */
+        stepInitialValue?.let {
+            _enterForStepInitialValue(it)
+            _exitForStepInitialValue(it)
+        }
+
+        val node = CFGNodeForStatement(CFGNodeForStatement.NodeType.CONDITION, ctx.altNumber, stack.size, stepCondition?.name ?: "true")
         graph.enter(stack.push(node))
     }
 
     override fun exitForStatement(ctx: CParser.ForStatementContext) {
+        /* Находим следующее: for (conditionSteps) == for (начальное_значение; stepCondition; приращение) */
+        val conditionSteps = ctx.children.filterIsInstance<CParser.ForConditionStepsContext>().first()
+        val stepIncrement = conditionSteps.children.filterIsInstance<CParser.ForStepIncrementContext>().firstOrNull()
+
+        stepIncrement?.let {
+            _enterForStepIncrement(it)
+            _exitForStepIncrement(it)
+        }
+
+        graph.close(stack.pop())
+    }
+
+    private fun _enterForStepInitialValue(ctx: CParser.ForStepInitialValueContext) {
+        val node = CFGNodeForStatement(CFGNodeForStatement.NodeType.INITIAL, ctx.altNumber, stack.size, ctx.name)
+        graph.enter(stack.push(node))
+    }
+
+    private fun _exitForStepInitialValue(ctx: CParser.ForStepInitialValueContext) {
+        graph.close(stack.pop())
+    }
+
+    private fun _enterForStepIncrement(ctx: CParser.ForStepIncrementContext) {
+        val node = CFGNodeForStatement(CFGNodeForStatement.NodeType.INCREMENT, ctx.altNumber, stack.size, ctx.name)
+        graph.enter(stack.push(node))
+    }
+
+    private fun _exitForStepIncrement(ctx: CParser.ForStepIncrementContext) {
         graph.close(stack.pop())
     }
 
     /** Инструкция WHILE. */
 
     override fun enterWhileStatement(ctx: CParser.WhileStatementContext) {
-        val node = CFGNodeWhileStatement(ctx.altNumber, stack.size)
+        val expression = ctx.children.filterIsInstance<CParser.ExpressionContext>().first()
+        val node = CFGNodeWhileStatement(ctx.altNumber, stack.size, expression.name)
         graph.enter(stack.push(node))
     }
 
@@ -100,7 +149,8 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
     /** Инструкция DO WHILE. */
 
     override fun enterDoWhileStatement(ctx: CParser.DoWhileStatementContext) {
-        val node = CFGNodeDoWhileStatement(ctx.altNumber, stack.size)
+        val expression = ctx.children.filterIsInstance<CParser.ExpressionContext>().first()
+        val node = CFGNodeDoWhileStatement(ctx.altNumber, stack.size, expression.name)
         graph.enter(stack.push(node))
     }
 
@@ -115,8 +165,7 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
     /** Вызов функции. */
 
     override fun enterFunctionCall(ctx: CParser.FunctionCallContext) {
-        val origin = ctx.postfixExpression().primaryExpression().Identifier()
-        val node = CFGNodeFunctionCall(ctx.altNumber, stack.size, origin.text + "(...)")
+        val node = CFGNodeFunctionCall(ctx.altNumber, stack.size, ctx.name)
         graph.enter(stack.push(node))
     }
 
@@ -124,10 +173,22 @@ class ASTAdapter(private val graph: CFGraph) : CBaseListener()
         graph.close(stack.pop())
     }
 
+    /** Метка. */
+
+    override fun enterLabeledStatement(ctx: CParser.LabeledStatementContext) {
+        val node = CFGNodeLabel(ctx.altNumber, stack.size, ctx.Identifier().text)
+        graph.enter(stack.push(node))
+    }
+
+
+    override fun exitLabeledStatement(ctx: CParser.LabeledStatementContext) {
+        graph.close(stack.pop())
+    }
+
     /** Инструкция GOTO. */
 
     override fun enterGotoStatement(ctx: CParser.GotoStatementContext) {
-        val node = CFGNodeGotoStatement(ctx.altNumber, stack.size)
+        val node = CFGNodeGotoStatement(ctx.altNumber, stack.size, ctx.Identifier().text)
         graph.enter(stack.push(node))
     }
 
