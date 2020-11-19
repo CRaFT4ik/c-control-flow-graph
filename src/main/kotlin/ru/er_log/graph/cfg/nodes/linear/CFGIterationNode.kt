@@ -61,17 +61,15 @@ data class CFGNodeForStatement(
     val nodeType: NodeType,
     override val context: Int,
     override val deepness: Int,
-    private val _title: String = "for statement",
+    override val title: String = "for statement",
     override val style: NodeStyle = if (nodeType === NodeType.CONDITION) {
         StyleCatalogue.NodeStyles.choiceInCycle
     } else {
         StyleCatalogue.NodeStyles.default
     }
-) : CFGIterationNode(context, deepness, _title, style)
+) : CFGIterationNode(context, deepness, title, style)
 {
     enum class NodeType { INITIAL, CONDITION, INCREMENT }
-
-    override val title = if (nodeType === NodeType.CONDITION) "if ($_title)" else _title
 
     override fun onClose() {
         if (nodeType !== NodeType.CONDITION) return
@@ -98,22 +96,17 @@ data class CFGNodeForStatement(
 data class CFGNodeWhileStatement(
     override val context: Int,
     override val deepness: Int,
-    private val _title: String = "while statement",
+    override val title: String = "while statement",
     override val style: NodeStyle = StyleCatalogue.NodeStyles.choiceInCycle
-) : CFGIterationNode(context, deepness, _title, style)
-{
-    override val title = "while ($_title)"
-}
+) : CFGIterationNode(context, deepness, title, style)
 
 data class CFGNodeDoWhileStatement(
     override val context: Int,
     override val deepness: Int,
-    private val _title: String = "do while statement",
+    override val title: String = "do while statement",
     override val style: NodeStyle = StyleCatalogue.NodeStyles.choiceInCycle
-) : CFGIterationNode(context, deepness, _title, style)
+) : CFGIterationNode(context, deepness, title, style)
 {
-    override val title = "while ($_title)"
-
     override fun onEnter() {}
 
     override fun onClose() {

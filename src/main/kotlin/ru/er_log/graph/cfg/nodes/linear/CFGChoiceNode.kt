@@ -41,21 +41,15 @@ abstract class CFGChoiceNode(
 data class CFGNodeIfStatement(
     override val context: Int,
     override val deepness: Int,
-    private val _title: String = "if statement",
+    override val title: String = "if statement",
     override val style: NodeStyle = StyleCatalogue.NodeStyles.choice
-) : CFGChoiceNode(context, deepness, _title, style)
-{
-    override val title = "if ($_title)"
-}
+) : CFGChoiceNode(context, deepness, title, style)
 
 data class CFGNodeElseIfStatement(
     override val context: Int,
     override val deepness: Int,
-    private val _title: String = "else if statement"
-) : CFGChoiceNode(context, deepness, _title)
-{
-    override val title = "else if ($_title)"
-}
+    override val title: String = "else if statement"
+) : CFGChoiceNode(context, deepness, title)
 
 data class CFGNodeElseStatement(
     override val context: Int,
