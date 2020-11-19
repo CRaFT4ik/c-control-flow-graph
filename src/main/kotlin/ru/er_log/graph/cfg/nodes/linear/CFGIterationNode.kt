@@ -83,6 +83,15 @@ data class CFGNodeForStatement(
         val linkType = if (nodeType === NodeType.INCREMENT && this.linked.isEmpty()) { CFGLink.LinkType.DIR_BACK } else  { CFGLink.LinkType.DEFAULT }
         super.link(other, linkStyle, *type, linkType)
     }
+
+    override fun leaves(): MutableSet<CFGNode> {
+        if (nodeType === NodeType.CONDITION) {
+            val leaves = super.leaves()
+            leaves.removeIf { it is CFGNodeForStatement && it.context == this.context && it.nodeType !== NodeType.CONDITION }
+        }
+
+        return super.leaves()
+    }
 }
 
 data class CFGNodeWhileStatement(
