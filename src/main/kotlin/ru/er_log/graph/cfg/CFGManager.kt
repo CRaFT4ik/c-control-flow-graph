@@ -90,7 +90,9 @@ data class CFGResult(
                 StyleCatalogue.NodeStyles.Shape.DIAMOND -> "4"
                 else -> "2"
             }
-            return "${title(node)}[shape=\"${node.style.shape.value}\",fontcolor=\"${node.style.color.value}\",fillcolor=\"${node.style.fillcolor.value}\",width=$width];"
+
+            val fillColor = if (!node.isDeadCode) { node.style.fillcolor.value } else { StyleCatalogue.ColorPalette.LIGHT_H.value }
+            return "${title(node)}[shape=\"${node.style.shape.value}\",fontcolor=\"${node.style.color.value}\",fillcolor=\"${fillColor}\",width=$width];"
         }
 
         builder.append("digraph{")

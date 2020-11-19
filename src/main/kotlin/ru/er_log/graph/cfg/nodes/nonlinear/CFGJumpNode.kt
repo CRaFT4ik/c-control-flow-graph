@@ -76,11 +76,44 @@ data class CFGNodeBreakStatement(
     private var iteratorHappened = false
 
     override fun isLinkable(to: CFGNode): Boolean = when {
-        this.deepness == to.deepness -> false
         iteratorHappened -> true
         to is CFGNodeFunction -> true
-        to is CFGIterationNode -> { iteratorHappened = true; false }
+        to is CFGIterationNode -> findOldestCycle(this) === to
         else -> false
+    }
+
+    override fun link(other: CFGNode, defStyle: LinkStyle?, vararg type: CFGLink.LinkType) {
+        if (!isLinkable(other)) { return }
+
+        // Связываем только за следующим узлом после цикла.
+        if (!iteratorHappened) { iteratorHappened = true }
+        else { super.link(other, defStyle, *type) }
+    }
+
+    /**
+     * Определяет цикл-предок для [current], находящийся на наименьшей глубине.
+     *
+     * @param current узел, для которого осуществляется поиск по предкам
+     * @return  самый старший предок типа [CFGIterationNode] для узла [current],
+     *          или null, если такого предка не обнаружено
+     */
+    private fun findOldestCycle(current: CFGNode, visited: MutableList<CFGNode> = mutableListOf()): CFGIterationNode? {
+        if (visited.contains(current)) return null
+        else visited.add(current)
+
+        var oldestCycle: CFGIterationNode? = if (current is CFGIterationNode) current else null
+        fun tryToSetOldest(client: CFGIterationNode?) {
+            if (client == null) return
+            if (oldestCycle == null || oldestCycle!!.deepness > client.deepness) oldestCycle = client
+        }
+
+        val neighbors = current.linked.map { it.to }.filter { it.deepness <= current.deepness }
+        neighbors.forEach { node ->
+            if (node is CFGIterationNode) tryToSetOldest(node)
+            tryToSetOldest(findOldestCycle(node, visited.toMutableList()))
+        }
+
+        return oldestCycle
     }
 }
 

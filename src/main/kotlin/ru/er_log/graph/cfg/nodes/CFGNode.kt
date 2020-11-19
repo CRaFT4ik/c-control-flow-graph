@@ -36,6 +36,10 @@ sealed class CFGNode(
     val lastLinked: CFGNode?
         get() = linked.lastOrNull()?.to
 
+    /** Принадлежит ли узел мертвому коду.
+     * Устанавливается при завершении парсинга. */
+    var isDeadCode: Boolean = false
+
     /**
      * Определяет, может ли текущий узел быть привзяан к [to].
      */

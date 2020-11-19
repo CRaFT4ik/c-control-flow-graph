@@ -3,6 +3,7 @@ package ru.er_log.graph.cfg
 import com.github.aakira.napier.Napier
 import ru.er_log.graph.cfg.nodes.CFGBodyNode
 import ru.er_log.graph.cfg.nodes.CFGNode
+import ru.er_log.graph.cfg.nodes.linear.CFGNodeFunction
 import java.util.*
 
 data class CFGraph(
@@ -14,17 +15,10 @@ data class CFGraph(
     private val bodyStack: Stack<CFGBodyNode> = Stack()
 ) {
     fun start() {}
+
     fun finish() {
-//        // Удалим весь "мертвый код".
-//        val deadNodes = graph.filter { it.linked.isEmpty() && it.deepness > 0 }
-//
-//        fun collectDead(parent: CFGNode, list: MutableList<CFGNode> = mutableListOf()): MutableList<CFGNode> {
-//            list.add(parent)
-//            parent.links.forEach { link -> list.addAll(collectDead(link.to, list)) }
-//            return list
-//        }
-//
-//        deadNodes.forEach { graph.removeAll(collectDead(it)) }
+        /* Пометим весь мертвый код. */
+        graph.forEach { node -> if (findParentFunction(node) == null) { node.isDeadCode = true } }
     }
 
     /**
@@ -50,9 +44,35 @@ data class CFGraph(
         }
 
         bodyStack.lastOrNull()?.let {
-            Napier.v("  pushed ${node.title} into ${it.title}")
+            Napier.v("  pushing ${node.title} into ${it.title}")
             it.push(node)
         }
         graph.add(node)
+    }
+
+    /**
+     * Ищет функцию-родитель для узла [node].
+     *
+     * @param node узел, для которого осуществляется поиск
+     * @return узел [CFGNodeFunction], который является родительским для узла [node]
+     */
+    private fun findParentFunction(node: CFGNode, visited: MutableList<CFGNode> = mutableListOf()): CFGNodeFunction? {
+        if (visited.contains(node)) return null
+        else visited.add(node)
+
+        var result: CFGNodeFunction? = if (node is CFGNodeFunction) node else null
+        fun tryToSetResult(client: CFGNodeFunction?) {
+            if (client == null) return
+            if (result == null || result!!.deepness > client.deepness) result = client
+        }
+
+        val neighbors = node.linked.map { it.to }
+
+        neighbors.forEach { neighbor ->
+            if (neighbor is CFGNodeFunction) tryToSetResult(neighbor)
+            tryToSetResult(findParentFunction(neighbor, visited.toMutableList()))
+        }
+
+        return result
     }
 }
