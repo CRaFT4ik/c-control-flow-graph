@@ -91,7 +91,7 @@ data class CFGResult(
                 else -> "2"
             }
 
-            val fillColor = if (!node.isDeadCode) { node.style.fillcolor.value } else { StyleCatalogue.ColorPalette.BISQUE.value }
+            val fillColor = if (!node.isDeadCode) { node.style.fillcolor.value } else { StyleCatalogue.ColorPalette.LIGHT_H.value }
             return "${title(node)}[shape=\"${node.style.shape.value}\",fontcolor=\"${node.style.color.value}\",fillcolor=\"${fillColor}\",width=$width];"
         }
 

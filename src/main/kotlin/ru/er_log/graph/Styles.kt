@@ -9,15 +9,17 @@ class StyleCatalogue
 {
     enum class ColorPalette(val value: String)
     {
+        WHITE   ("#FFFFFF"),
         DARK    ("#2D2D2D"),
         GREY    ("#50514F"),
-        RED     ("#F26E6B"),
+        RED     ("#EB8D8D"),
         YELLOW  ("#FFE893"),
         BISQUE  ("#FFE4C4"),
-        BLUE    ("#85BEEF"),
-        GREEN   ("#70C1B3"),
+        BLUE    ("#93C3ED"),
+        GREEN   ("#74C2B5"),
         LIGHT   ("#F5F5F5"),
-        LIGHT_D ("#D8D8D8"),
+        LIGHT_L ("#DFDFDF"),
+        LIGHT_H ("#BEBEBE"),
     }
 
     class LinkStyles
@@ -44,7 +46,7 @@ class StyleCatalogue
         }
 
         companion object {
-            val default         = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.LIGHT, Shape.BOX)
+            val default         = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.WHITE, Shape.BOX)
             val function        = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.GREEN, Shape.BOX)
             val functionEnd     = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.RED, Shape.BOX)
             val choice          = NodeStyle(fontcolor = ColorPalette.DARK, fillcolor = ColorPalette.LIGHT, Shape.DIAMOND)
