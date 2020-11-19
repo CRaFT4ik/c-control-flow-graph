@@ -13,6 +13,7 @@ class StyleCatalogue
         GREY    ("#50514F"),
         RED     ("#F26E6B"),
         YELLOW  ("#FFE893"),
+        BISQUE  ("#FFE4C4"),
         BLUE    ("#85BEEF"),
         GREEN   ("#70C1B3"),
         LIGHT   ("#F5F5F5"),
