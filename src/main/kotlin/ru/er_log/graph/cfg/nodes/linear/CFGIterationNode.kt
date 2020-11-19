@@ -88,9 +88,10 @@ data class CFGNodeForStatement(
         if (nodeType === NodeType.CONDITION) {
             val leaves = super.leaves()
             leaves.removeIf { it is CFGNodeForStatement && it.context == this.context && it.nodeType !== NodeType.CONDITION }
+            return leaves
         }
 
-        return super.leaves()
+        return mutableSetOf()
     }
 }
 

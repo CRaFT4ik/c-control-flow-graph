@@ -44,7 +44,7 @@ data class CFGraph(
         }
 
         bodyStack.lastOrNull()?.let {
-            Napier.v("  pushed ${node.title} into ${it.title}")
+            Napier.v("  pushing ${node.title} into ${it.title}")
             it.push(node)
         }
         graph.add(node)
