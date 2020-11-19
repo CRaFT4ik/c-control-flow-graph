@@ -17,40 +17,52 @@ This graph shows the result for this `C` code:
 int main()
 {
     call1();
-    call2();
 label:
-    call3();
+    call2();
 
-    if (true) { call1(); }
-    do { call2(); } while (true);
+    for (int i = 0; i < 10; i++) {
+        if (1 > 0) {
+            if (if_check_1) printif();
+            test1();
 
-    for(int i = 0; i < 10; i++) {
-        if (1*0 > 0) {
-            if (true) printif();
-            test2();
-            break;
-            if (true) printif();
+            break; // Внимание! Тут BREAK.
+
+            if (if_check_2) printif();
             else test2();
         }
-        // Comment block
+        // This is comment line.
         else if (true && false) {
-            for(;;) { doo(); }
-            do { doo(); continue; lol(); } while(10 > 5); /* This is comment. */
-            while(true == true) { do { doo(); } while(true); }
+            for(;;) {
+                callInsideFor();
+            }
+
+            do {
+                callInsideDoWhile();
+
+                continue; // Внимание! Тут CONTINUE.
+
+                deadCallFromDoWhile();
+            } while(10 > 5); /* This is comment. */
+
+            while(while_check_1) {
+                do {
+                    callInsideDoubleDoWhile();
+                } while(dowhile_check_1);
+            }
         }
         else {
-            goto label;
-            printif3();
+            goto label; // Внимание! Тут GOTO.
+
+            deadLineAfterGOTO();
         }
 
-        if (true) { return; }
+        if (if_check_3) { return; }
     }
 
-    call5();
-    call6();
+    call3();
 }
 
-int onemorefunc() {
-    dodo();
+int oneMoreFunc() {
+    doSomething();
 }
 ```
